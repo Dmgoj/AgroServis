@@ -1,0 +1,44 @@
+﻿@model AgroServis.Services.DTO.EquipmentEditDto
+@{
+}
+
+<h2>Edit Equipment</h2>
+<form asp-action="Edit" method="post">
+	<div class="form-group">
+		<label asp-for="Manufacturer"></label>
+		<input asp-for="Manufacturer" class="form-control" />
+		<span asp-validation-for="Manufacturer" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="Model"></label>
+		<input asp-for="Model" class="form-control" />
+		<span asp-validation-for="Model" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="SerialNumber"></label>
+		<input asp-for="SerialNumber" class="form-control" />
+		<span asp-validation-for="SerialNumber" class="text-danger"></span>
+	</div>
+	<div>
+		<label>Type</label>
+		<select name="EquipmentTypeId" id="typeSelect" class="form-control">
+			<option value="@Model.EquipmentTypeId">@Model.EquipmentType?.Type</option>
+			@foreach (var type in Model.EquipmentTypes)
+			{
+				<option value="@type.Id" selected="@(type.Id == Model.EquipmentTypeId ? "selected" : null)">@type.Type</option>
+			}
+		</select>
+	</div>
+	<div>
+		<label>Category</label>
+		<select name="EquipmentCategoryId" id="categorySelect" class="form-control">
+			<option value="@Model.EquipmentCategory?.Id">@Model.EquipmentCategory?.Category</option>
+			@foreach (var cat in Model.EquipmentCategories)
+			{
+				<option value="@cat.Id" selected="@(cat.Id == Model.EquipmentCategory?.Id ? "selected" : null)">@cat.Category</option>
+			}
+		</select>
+	</div>
+	<input type="hidden" asp-for="Id" />
+	<button type="submit" class="btn btn-primary">Save</button>
+</form>

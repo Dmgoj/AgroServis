@@ -1,0 +1,26 @@
+﻿@model AgroServis.Services.DTO.EquipmentDto
+@{
+}
+
+<h2>Equipment Details</h2>
+
+<div class="row">
+	<div class="col-md-6">
+		<dl class="dl-horizontal">
+			
+			<dt>Manufacturer</dt>
+			<dd>@Model.Manufacturer</dd>
+			<dt>Model</dt>
+			<dd>@Model.Model</dd>
+			<dt>Serial Number</dt>
+			<dd>@Model.SerialNumber</dd>
+			<dt>Type</dt>
+			<dd>@Model.EquipmentType</dd>
+			<dt>Category</dt>
+			<dd>@Model.EquipmentCategory</dd>
+		</dl>
+	</div>
+	<div class="col-md-6">
+		<a asp-controller="Equipment" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+		<a asp-controller="Equipment" asp-action="Index" class="btn btn-secondary">Back to List</a>
+	</div>

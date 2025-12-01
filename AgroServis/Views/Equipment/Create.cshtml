@@ -1,0 +1,64 @@
+﻿@model AgroServis.Services.DTO.EquipmentEditDto
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+@if (TempData["CreatedEquipmentName"] is not null)
+{
+    <div class="alert alert-success">
+        Created: @TempData["CreatedEquipmentName"]
+    </div>
+}
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Manufacturer" class="control-label"></label>
+                <input asp-for="Manufacturer" class="form-control" />
+                <span asp-validation-for="Manufacturer" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Model" class="control-label"></label>
+                <input asp-for="Model" class="form-control" />
+                <span asp-validation-for="Model" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="SerialNumber" class="control-label"></label>
+                <input asp-for="SerialNumber" class="form-control" />
+                <span asp-validation-for="SerialNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="EquipmentTypeId" class="control-label">Type</label>
+                <select asp-for="EquipmentTypeId"
+                        class="form-control"
+                        asp-items="@(new SelectList(Model.EquipmentTypes ?? Enumerable.Empty<AgroServis.DAL.Entities.EquipmentType>(), "Id", "Type", Model.EquipmentTypeId))">
+                    <option value="">-- select type --</option>
+                </select>
+                <span asp-validation-for="EquipmentTypeId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
