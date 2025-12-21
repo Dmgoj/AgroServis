@@ -16,6 +16,10 @@ namespace AgroServis.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var equipment = await _service.GetAllAsync(pageNumber, pageSize);
             return View(equipment);
         }
