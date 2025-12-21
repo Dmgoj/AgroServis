@@ -5,6 +5,7 @@ using AgroServis.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using AgroServis.Services.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +38,7 @@ namespace AgroServis.Services
             if (forDelete == null)
             {
                 _logger.LogWarning("Attempted to delete non-existing equipment with ID {Id}.", id);
-                throw new InvalidOperationException($"Equipment with ID {id} not found.");
+                throw new EntityNotFoundException("Equipment", id);
             }
 
             _context.Remove(forDelete);
@@ -149,8 +150,7 @@ namespace AgroServis.Services
 
             if (equipment == null)
             {
-                _logger.LogWarning("Equipment {Id} not found for edit", id);
-                return null;
+                throw new EntityNotFoundException("Equipment", id);
             }
 
             var types = await GetCachedEquipmentTypesAsync();
@@ -192,6 +192,14 @@ namespace AgroServis.Services
                dto.Manufacturer,
                dto.Model);
 
+            var existingEquipment = await _context.Equipment
+                .AnyAsync(e => e.SerialNumber == dto.SerialNumber);
+
+            if (existingEquipment)
+            {
+                throw new DuplicateEntityException(dto.SerialNumber);
+            }
+
             var equipment = new Equipment
             {
                 Manufacturer = dto.Manufacturer,
@@ -218,7 +226,7 @@ namespace AgroServis.Services
             if (equipment == null)
             {
                 _logger.LogWarning("Cannot update equipment {Id} - not found", dto.Id);
-                throw new InvalidOperationException("Equipment not found.");
+                throw new EntityNotFoundException("Equipment", dto.Id);
             }
 
             equipment.Manufacturer = dto.Manufacturer;

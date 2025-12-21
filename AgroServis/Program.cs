@@ -1,5 +1,6 @@
 using AgroServis.DAL;
 using AgroServis.DAL.Seeding;
+using AgroServis.Middleware;
 using AgroServis.Services;
 using AgroServis.Services.Utilities;
 using Microsoft.AspNetCore.Identity;
@@ -23,10 +24,15 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IPaginationService, PaginationService>();
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
