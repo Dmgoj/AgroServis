@@ -14,5 +14,6 @@ namespace AgroServis.DAL
         public DbSet<EquipmentType> EquipmentTypes { get; set; }
         public DbSet<Equipment> Equipment { get; set; }
         public DbSet<EquipmentCategory> EquipmentCategories { get; set; }
+        public DbSet<Maintenance> MaintenanceRecords { get; set; }
     }
 }
