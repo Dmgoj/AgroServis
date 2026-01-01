@@ -1,6 +1,9 @@
-﻿public enum MaintenanceType
+﻿namespace AgroServis.DAL.Enums
 {
-    Regular = 1,
-    Repair = 2,
-    Upgrade = 3
+    public enum MaintenanceType
+    {
+        Regular = 1,
+        Repair = 2,
+        Upgrade = 3
+    }
 }
