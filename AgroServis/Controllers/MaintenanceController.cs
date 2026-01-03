@@ -1,0 +1,93 @@
+﻿using AgroServis.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AgroServis.Controllers
+{
+    public class MaintenanceController : Controller
+    {
+        private readonly IMaintenanceService _service;
+        public MaintenanceController(IMaintenanceService service)
+        {
+            _service = service;
+        }
+
+        public MaintenanceController()
+        { }
+        // GET: MaintenanceController
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        // GET: MaintenanceController/Details/5
+        public ActionResult Details(int id)
+        {
+            return View();
+        }
+
+        // GET: MaintenanceController/Create
+        public ActionResult Create()
+        {
+            var model = _service.GetForCreate();
+            return View();
+        }
+
+        // POST: MaintenanceController/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Create(IFormCollection collection)
+        {
+            try
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return View();
+            }
+        }
+
+        // GET: MaintenanceController/Edit/5
+        public ActionResult Edit(int id)
+        {
+            return View();
+        }
+
+        // POST: MaintenanceController/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(int id, IFormCollection collection)
+        {
+            try
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return View();
+            }
+        }
+
+        // GET: MaintenanceController/Delete/5
+        public ActionResult Delete(int id)
+        {
+            return View();
+        }
+
+        // POST: MaintenanceController/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Delete(int id, IFormCollection collection)
+        {
+            try
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                return View();
+            }
+        }
+    }
+}
