@@ -1,7 +1,10 @@
 ﻿using AgroServis.DAL;
+using AgroServis.DAL.Entities;
 using AgroServis.Services.DTO;
 using AgroServis.Services.DTOs;
+using AgroServis.Services.Exceptions;
 using AgroServis.Services.Utilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
@@ -19,9 +22,48 @@ namespace AgroServis.Services
         private readonly IMemoryCache _cache;
         private readonly ILogger<MaintenanceService> _logger;
 
-        public Task<int> CreateAsync(MaintenanceCreateDto dto)
+        public MaintenanceService(
+            ApplicationDbContext context,
+            IPaginationService paginationService,
+            IMemoryCache cache,
+            ILogger<MaintenanceService> logger)
         {
-            throw new NotImplementedException();
+            _context = context;
+            _paginationService = paginationService;
+            _cache = cache;
+            _logger = logger;
+        }
+
+
+        public async Task<int> CreateAsync(MaintenanceCreateDto dto)
+        {
+            _logger.LogInformation("Creating maintenance for equipment {EquipmentId}", dto.EquipmentId);
+
+            var equipmentExists = await _context.Equipment.AnyAsync(e => e.Id == dto.EquipmentId);
+
+            if (!equipmentExists)
+            {
+                throw new EntityNotFoundException("equipment", dto.EquipmentId);
+            }
+
+            var maintenance = new Maintenance
+            {
+                EquipmentId = dto.EquipmentId,
+                MaintenanceDate = dto.MaintenanceDate,
+                Description = dto.Description,
+                Type = dto.Type,
+                Status = dto.Status,
+                Cost = dto.Cost,
+                Notes = dto.Notes,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.MaintenanceRecords.Add(maintenance);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Maintenance created with ID {Id}", maintenance.Id);
+
+            return maintenance.Id;
         }
 
         public Task DeleteAsync(int id)
@@ -44,9 +86,25 @@ namespace AgroServis.Services
             throw new NotImplementedException();
         }
 
-        public Task<MaintenanceEditDto> GetForCreateAsync()
+        public async Task<MaintenanceCreateDto> GetForCreateAsync()
         {
-            throw new NotImplementedException();
+            var availableEquipment = await _context.Equipment
+        .Select(e => new EquipmentDto
+        {
+            Id = e.Id,
+            Manufacturer = e.Manufacturer,
+            Model = e.Model,
+            SerialNumber = e.SerialNumber,
+            EquipmentTypeId = e.EquipmentTypeId,
+            EquipmentType = e.EquipmentType.Type,
+            EquipmentCategory = e.EquipmentType.EquipmentCategory.Category
+        })
+        .ToListAsync();
+
+            return new MaintenanceCreateDto
+            {
+                AvailableEquipment = availableEquipment
+            };
         }
 
         public Task UpdateAsync(MaintenanceUpdateDto dto)
