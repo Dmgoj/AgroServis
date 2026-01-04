@@ -1,4 +1,7 @@
 ﻿using AgroServis.Services;
+using AgroServis.Services.DTOs;
+using AgroServis.Services.Exceptions;
+using Humanizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,8 +15,6 @@ namespace AgroServis.Controllers
             _service = service;
         }
 
-        public MaintenanceController()
-        { }
         // GET: MaintenanceController
         public ActionResult Index()
         {
@@ -27,24 +28,44 @@ namespace AgroServis.Controllers
         }
 
         // GET: MaintenanceController/Create
-        public ActionResult Create()
+        public async Task<IActionResult> Create(int? equipmentId = null)
         {
-            var model = _service.GetForCreate();
-            return View();
+            var model = await _service.GetForCreateAsync();
+
+            if (equipmentId.HasValue)
+            {
+                model.EquipmentId = equipmentId.Value;
+            }
+
+            return View(model);
         }
 
         // POST: MaintenanceController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create(MaintenanceCreateDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                var model = await _service.GetForCreateAsync();
+                dto.AvailableEquipment = model.AvailableEquipment;
+                return View(dto);
+            }
+
             try
             {
-                return RedirectToAction(nameof(Index));
+                var id = await _service.CreateAsync(dto);
+
+                TempData["Success"] = "Maintenance record created successfully!";
+                return RedirectToAction(nameof(Details), new { id });
             }
-            catch
+            catch (EntityNotFoundException ex)
             {
-                return View();
+                TempData["Error"] = ex.Message;
+
+                var model = await _service.GetForCreateAsync();
+                dto.AvailableEquipment = model.AvailableEquipment;
+                return View(dto);
             }
         }
 
