@@ -34,7 +34,6 @@ namespace AgroServis.Services
             _logger = logger;
         }
 
-
         public async Task<int> CreateAsync(MaintenanceCreateDto dto)
         {
             _logger.LogInformation("Creating maintenance for equipment {EquipmentId}", dto.EquipmentId);
@@ -71,9 +70,52 @@ namespace AgroServis.Services
             throw new NotImplementedException();
         }
 
-        public Task<PagedResult<MaintenanceDto>> GetAllAsync(int page, int pageSize)
+        public async Task<PagedResult<MaintenanceDto>> GetAllAsync(int page, int pageSize)
         {
-            throw new NotImplementedException();
+            var cacheKey = $"MaintenancePage_{page}_Size_{pageSize}";
+
+            if (_cache.TryGetValue(cacheKey, out PagedResult<MaintenanceDto>? cached) && cached != null)
+            {
+                _logger.LogDebug("Cache HIT: Maintenance page {Page}", page);
+                return cached;
+            }
+
+            _logger.LogDebug("Cache MISS: Maintenance page {Page}, querying database", page);
+
+            var query = _context.MaintenanceRecords
+             .Include(m => m.Equipment)
+             .ThenInclude(e => e.EquipmentType)
+             .ThenInclude(et => et.EquipmentCategory)
+             .OrderByDescending(m => m.MaintenanceDate)
+             .Select(m => new MaintenanceDto
+             {
+                 Id = m.Id,
+                 EquipmentId = m.EquipmentId,
+                 EquipmentName = $"{m.Equipment.Manufacturer} {m.Equipment.Model}",
+                 EquipmentSerialNumber = m.Equipment.SerialNumber,
+                 MaintenanceDate = m.MaintenanceDate,
+                 Description = m.Description,
+                 Type = m.Type,
+                 Status = m.Status,
+                 Cost = m.Cost,
+                 Notes = m.Notes,
+                 PerformedBy = m.PerformedBy,
+                 CreatedAt = m.CreatedAt,
+                 UpdatedAt = m.UpdatedAt
+             });
+
+            var result = await _paginationService.GetPagedAsync(query, page, pageSize);
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromMinutes(5))
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(15))
+                .SetPriority(CacheItemPriority.Low);
+
+            _cache.Set(cacheKey, result, cacheOptions);
+
+            _logger.LogInformation("Maintenance page {Page} loaded and cached with {Count} items", page, result.Items.Count);
+
+            return result;
         }
 
         public Task<MaintenanceDto> GetByIdAsync(int id)
