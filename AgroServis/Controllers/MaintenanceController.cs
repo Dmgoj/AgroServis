@@ -16,9 +16,14 @@ namespace AgroServis.Controllers
         }
 
         // GET: MaintenanceController
-        public ActionResult Index()
+        public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10)
         {
-            return View();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var maintenances = await _service.GetAllAsync(pageNumber, pageSize);
+            return View(maintenances);
         }
 
         // GET: MaintenanceController/Details/5
