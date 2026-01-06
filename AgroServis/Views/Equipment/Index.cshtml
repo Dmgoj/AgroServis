@@ -16,6 +16,7 @@
 					<th>SerialNumber</th>
 					<th>Type</th>
 					<th>Category</th>
+					<th>Last Maintenance</th>
 					<th>Actions</th>
 				</tr>
 			</thead>
@@ -29,6 +30,7 @@
 						<td>@item.SerialNumber</td>
 						<td>@item.EquipmentType</td>
 						<td>@item.EquipmentCategory</td>
+						<td>@item.FormattedLastMaintenanceDate</td>
 						<td>
 							<a asp-controller="Equipment" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
 							<form asp-controller="Equipment" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;">

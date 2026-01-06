@@ -26,6 +26,6 @@ namespace AgroServis.Services.DTOs
         public DateTime? UpdatedAt { get; init; }
 
         public string FormattedCost => Cost.HasValue ? $"{Cost:C2}" : "N/A";
-        public string FormattedDate => MaintenanceDate.ToString("yyyy-MM-dd");
+        public string FormattedDate => MaintenanceDate.ToString("dd-MM-yyyy");
     }
 }

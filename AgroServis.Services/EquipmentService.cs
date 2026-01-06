@@ -67,18 +67,20 @@ namespace AgroServis.Services
             _logger.LogDebug("Cache MISS: Loading page {Page} (size {PageSize}) from database", page, pageSize);
 
             var query = _context.Equipment
-                .Include(e => e.EquipmentType)
-                .ThenInclude(et => et.EquipmentCategory)
-                .Select(e => new EquipmentDto
-                {
-                    Id = e.Id,
-                    Manufacturer = e.Manufacturer,
-                    Model = e.Model,
-                    SerialNumber = e.SerialNumber,
-                    EquipmentTypeId = e.EquipmentTypeId,
-                    EquipmentType = e.EquipmentType.Type,
-                    EquipmentCategory = e.EquipmentType.EquipmentCategory.Category
-                });
+             .Select(e => new EquipmentDto
+             {
+                 Id = e.Id,
+                 Manufacturer = e.Manufacturer,
+                 Model = e.Model,
+                 SerialNumber = e.SerialNumber,
+                 EquipmentTypeId = e.EquipmentTypeId,
+                 EquipmentType = e.EquipmentType.Type,
+                 EquipmentCategory = e.EquipmentType.EquipmentCategory.Category,
+                 LastMaintenanceDate = e.MaintenanceRecords
+                     .OrderByDescending(m => m.MaintenanceDate)
+                     .Select(m => (DateTime?)m.MaintenanceDate)
+                     .FirstOrDefault()
+             });
 
             var pagedResult = await _paginationService.GetPagedAsync(query, page, pageSize);
 
