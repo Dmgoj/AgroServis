@@ -11,20 +11,5 @@ namespace AgroServis.DAL.Entities
         public EquipmentType EquipmentType { get; set; }
 
         public ICollection<Maintenance>? MaintenanceRecords { get; set; } = new List<Maintenance>();
-
-        public bool IsMaintenanceDue
-        {
-            get
-            {
-                var lastMaintenance = MaintenanceRecords
-                    .OrderByDescending(m => m.MaintenanceDate)
-                    .FirstOrDefault();
-
-                if (lastMaintenance == null)
-                    return true;
-
-                return lastMaintenance.MaintenanceDate.AddYears(1) <= DateTime.Now;
-            }
-        }
     }
 }

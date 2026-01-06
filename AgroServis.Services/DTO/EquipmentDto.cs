@@ -1,4 +1,5 @@
 ﻿namespace AgroServis.Services.DTO;
+
 public record EquipmentDto
 {
     public int Id { get; set; }
@@ -8,4 +9,10 @@ public record EquipmentDto
     public int EquipmentTypeId { get; set; }
     public string EquipmentType { get; set; } = string.Empty;
     public string EquipmentCategory { get; set; } = string.Empty;
+    public DateTime? LastMaintenanceDate { get; set; }
+    public bool IsMaintenanceDue =>
+          !LastMaintenanceDate.HasValue ||
+          LastMaintenanceDate.Value.AddYears(1) <= DateTime.UtcNow;
+
+    public string FormattedLastMaintenanceDate => LastMaintenanceDate.HasValue ? LastMaintenanceDate.Value.ToString("dd-MM-yyyy") : "N/A";
 }
