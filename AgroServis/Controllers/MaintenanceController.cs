@@ -62,7 +62,7 @@ namespace AgroServis.Controllers
                 var id = await _service.CreateAsync(dto);
 
                 TempData["Success"] = "Maintenance record created successfully!";
-                return RedirectToAction(nameof(Details), new { id });
+                return RedirectToAction(nameof(Index));
             }
             catch (EntityNotFoundException ex)
             {
