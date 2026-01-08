@@ -60,6 +60,7 @@ namespace AgroServis.Services
             _context.MaintenanceRecords.Add(maintenance);
             await _context.SaveChangesAsync();
 
+            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Maintenance");
             _logger.LogInformation("Maintenance created with ID {Id}", maintenance.Id);
 
             return maintenance.Id;

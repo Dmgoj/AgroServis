@@ -46,7 +46,7 @@ namespace AgroServis.Services
 
             _cache.Remove($"Equipment_{id}");
 
-            InvalidatePaginationCaches();
+            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Equipment");
 
             _logger.LogInformation(
                "Equipment {Id} ({Manufacturer} {Model}) deleted",
@@ -212,7 +212,7 @@ namespace AgroServis.Services
             _context.Equipment.Add(equipment);
             await _context.SaveChangesAsync();
 
-            InvalidatePaginationCaches();
+            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Equipment");
 
             _logger.LogInformation("Equipment created with ID {Id}", equipment.Id);
 
@@ -239,7 +239,7 @@ namespace AgroServis.Services
             await _context.SaveChangesAsync();
             _cache.Remove($"Equipment_{dto.Id}");
 
-            InvalidatePaginationCaches();
+            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Equipment");
 
             _logger.LogInformation("Equipment {Id} updated successfully", dto.Id);
         }
@@ -282,16 +282,6 @@ namespace AgroServis.Services
             }
 
             return categories;
-        }
-
-        private void InvalidatePaginationCaches()
-        {
-            _logger.LogDebug("Invalidating pagination caches");
-
-            for (int page = 1; page <= 5; page++)
-            {
-                _cache.Remove($"EquipmentPage_{page}_Size_10");
-            }
         }
     }
 }
