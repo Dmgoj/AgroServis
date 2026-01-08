@@ -39,8 +39,24 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
             @RenderBody()
         </main>
+         
     </div>
 
     <footer class="border-top footer text-muted">
@@ -51,6 +67,18 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {       
+            document.querySelectorAll('.alert').forEach(alert => {  
+                setTimeout(() => {                                  
+                    alert.style.transition = 'opacity 0.5s';        
+                    alert.style.opacity = '0';                      
+                    setTimeout(() => alert.remove(), 500);          
+                }, 3000);
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
