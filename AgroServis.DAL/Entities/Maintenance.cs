@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AgroServis.DAL.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace AgroServis.DAL.Entities
 {
@@ -22,6 +23,7 @@ namespace AgroServis.DAL.Entities
 
         public MaintenanceStatus Status { get; set; }
 
+        [Precision(18, 2)]
         public decimal? Cost { get; set; }
 
         public string? PerformedBy { get; set; }
