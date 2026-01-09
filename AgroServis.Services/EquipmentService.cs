@@ -67,6 +67,7 @@ namespace AgroServis.Services
             _logger.LogDebug("Cache MISS: Loading page {Page} (size {PageSize}) from database", page, pageSize);
 
             var query = _context.Equipment
+             .OrderBy(e => e.Id)
              .Select(e => new EquipmentDto
              {
                  Id = e.Id,

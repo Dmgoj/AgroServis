@@ -84,6 +84,7 @@ namespace AgroServis.Services
             _logger.LogDebug("Cache MISS: Maintenance page {Page}, querying database", page);
 
             var query = _context.MaintenanceRecords
+             .OrderBy(e => e.Id)
              .Include(m => m.Equipment)
              .ThenInclude(e => e.EquipmentType)
              .ThenInclude(et => et.EquipmentCategory)
