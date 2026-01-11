@@ -10,6 +10,7 @@ namespace AgroServis.Controllers
     public class MaintenanceController : Controller
     {
         private readonly IMaintenanceService _service;
+
         public MaintenanceController(IMaintenanceService service)
         {
             _service = service;
@@ -27,9 +28,13 @@ namespace AgroServis.Controllers
         }
 
         // GET: MaintenanceController/Details/5
-        public ActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            return View();
+            var dto = await _service.GetByIdAsync(id);
+            if (dto == null)
+                return NotFound();
+
+            return View(dto);
         }
 
         // GET: MaintenanceController/Create
