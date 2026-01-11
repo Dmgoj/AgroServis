@@ -1,4 +1,9 @@
-﻿using AgroServis.DAL;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using AgroServis.DAL;
 using AgroServis.DAL.Entities;
 using AgroServis.Services.DTO;
 using AgroServis.Services.DTOs;
@@ -7,11 +12,6 @@ using AgroServis.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AgroServis.Services
 {
@@ -26,7 +26,8 @@ namespace AgroServis.Services
             ApplicationDbContext context,
             IPaginationService paginationService,
             IMemoryCache cache,
-            ILogger<MaintenanceService> logger)
+            ILogger<MaintenanceService> logger
+        )
         {
             _context = context;
             _paginationService = paginationService;
@@ -36,7 +37,10 @@ namespace AgroServis.Services
 
         public async Task<int> CreateAsync(MaintenanceCreateDto dto)
         {
-            _logger.LogInformation("Creating maintenance for equipment {EquipmentId}", dto.EquipmentId);
+            _logger.LogInformation(
+                "Creating maintenance for equipment {EquipmentId}",
+                dto.EquipmentId
+            );
 
             var equipmentExists = await _context.Equipment.AnyAsync(e => e.Id == dto.EquipmentId);
 
@@ -54,7 +58,7 @@ namespace AgroServis.Services
                 Status = dto.Status,
                 Cost = dto.Cost,
                 Notes = dto.Notes,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
             };
 
             _context.MaintenanceRecords.Add(maintenance);
@@ -75,7 +79,10 @@ namespace AgroServis.Services
         {
             var cacheKey = $"MaintenancePage_{page}_Size_{pageSize}";
 
-            if (_cache.TryGetValue(cacheKey, out PagedResult<MaintenanceDto>? cached) && cached != null)
+            if (
+                _cache.TryGetValue(cacheKey, out PagedResult<MaintenanceDto>? cached)
+                && cached != null
+            )
             {
                 _logger.LogDebug("Cache HIT: Maintenance page {Page}", page);
                 return cached;
@@ -83,28 +90,28 @@ namespace AgroServis.Services
 
             _logger.LogDebug("Cache MISS: Maintenance page {Page}, querying database", page);
 
-            var query = _context.MaintenanceRecords
-             .OrderBy(e => e.Id)
-             .Include(m => m.Equipment)
-             .ThenInclude(e => e.EquipmentType)
-             .ThenInclude(et => et.EquipmentCategory)
-             .OrderByDescending(m => m.MaintenanceDate)
-             .Select(m => new MaintenanceDto
-             {
-                 Id = m.Id,
-                 EquipmentId = m.EquipmentId,
-                 EquipmentName = $"{m.Equipment.Manufacturer} {m.Equipment.Model}",
-                 EquipmentSerialNumber = m.Equipment.SerialNumber,
-                 MaintenanceDate = m.MaintenanceDate,
-                 Description = m.Description,
-                 Type = m.Type,
-                 Status = m.Status,
-                 Cost = m.Cost,
-                 Notes = m.Notes,
-                 PerformedBy = m.PerformedBy,
-                 CreatedAt = m.CreatedAt,
-                 UpdatedAt = m.UpdatedAt
-             });
+            var query = _context
+                .MaintenanceRecords.OrderBy(e => e.Id)
+                .Include(m => m.Equipment)
+                .ThenInclude(e => e.EquipmentType)
+                .ThenInclude(et => et.EquipmentCategory)
+                .OrderByDescending(m => m.MaintenanceDate)
+                .Select(m => new MaintenanceDto
+                {
+                    Id = m.Id,
+                    EquipmentId = m.EquipmentId,
+                    EquipmentName = $"{m.Equipment.Manufacturer} {m.Equipment.Model}",
+                    EquipmentSerialNumber = m.Equipment.SerialNumber,
+                    MaintenanceDate = m.MaintenanceDate,
+                    Description = m.Description,
+                    Type = m.Type,
+                    Status = m.Status,
+                    Cost = m.Cost,
+                    Notes = m.Notes,
+                    PerformedBy = m.PerformedBy,
+                    CreatedAt = m.CreatedAt,
+                    UpdatedAt = m.UpdatedAt,
+                });
 
             var result = await _paginationService.GetPagedAsync(query, page, pageSize);
 
@@ -115,14 +122,40 @@ namespace AgroServis.Services
 
             _cache.Set(cacheKey, result, cacheOptions);
 
-            _logger.LogInformation("Maintenance page {Page} loaded and cached with {Count} items", page, result.Items.Count);
+            _logger.LogInformation(
+                "Maintenance page {Page} loaded and cached with {Count} items",
+                page,
+                result.Items.Count
+            );
 
             return result;
         }
 
-        public Task<MaintenanceDto> GetByIdAsync(int id)
+        public async Task<MaintenanceDto> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context
+                .MaintenanceRecords.AsNoTracking()
+                .Where(m => m.Id == id)
+                .Select(m => new MaintenanceDto
+                {
+                    Id = m.Id,
+                    EquipmentId = m.EquipmentId,
+                    EquipmentName = m.Equipment.Model,
+                    EquipmentSerialNumber = m.Equipment.SerialNumber,
+
+                    MaintenanceDate = m.MaintenanceDate,
+                    Description = m.Description,
+                    Type = m.Type,
+                    Status = m.Status,
+
+                    Cost = m.Cost,
+                    Notes = m.Notes,
+                    PerformedBy = m.PerformedBy,
+
+                    CreatedAt = m.CreatedAt,
+                    UpdatedAt = m.UpdatedAt,
+                })
+                .FirstOrDefaultAsync();
         }
 
         public Task<MaintenanceEditDto> GetByIdForEditAsync(int id)
@@ -132,23 +165,20 @@ namespace AgroServis.Services
 
         public async Task<MaintenanceCreateDto> GetForCreateAsync()
         {
-            var availableEquipment = await _context.Equipment
-        .Select(e => new EquipmentDto
-        {
-            Id = e.Id,
-            Manufacturer = e.Manufacturer,
-            Model = e.Model,
-            SerialNumber = e.SerialNumber,
-            EquipmentTypeId = e.EquipmentTypeId,
-            EquipmentType = e.EquipmentType.Type,
-            EquipmentCategory = e.EquipmentType.EquipmentCategory.Category
-        })
-        .ToListAsync();
+            var availableEquipment = await _context
+                .Equipment.Select(e => new EquipmentDto
+                {
+                    Id = e.Id,
+                    Manufacturer = e.Manufacturer,
+                    Model = e.Model,
+                    SerialNumber = e.SerialNumber,
+                    EquipmentTypeId = e.EquipmentTypeId,
+                    EquipmentType = e.EquipmentType.Type,
+                    EquipmentCategory = e.EquipmentType.EquipmentCategory.Category,
+                })
+                .ToListAsync();
 
-            return new MaintenanceCreateDto
-            {
-                AvailableEquipment = availableEquipment
-            };
+            return new MaintenanceCreateDto { AvailableEquipment = availableEquipment };
         }
 
         public Task UpdateAsync(MaintenanceUpdateDto dto)
