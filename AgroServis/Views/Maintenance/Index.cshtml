@@ -34,9 +34,8 @@
                         <td>@item.Type</td>
                         <td>
                             <span class="badge
-                                    @(item.Status == MaintenanceStatus.Completed ? "bg-success" :
-                                                                    item.Status == MaintenanceStatus.InProgress ? "bg-warning" :
-                                                                    "bg-secondary")">
+                                @(item.Status == MaintenanceStatus.Completed ? "bg-success" :
+                                  item.Status == MaintenanceStatus.InProgress ? "bg-warning" : "bg-secondary")">
                                 @item.Status
                             </span>
                         </td>
