@@ -70,9 +70,24 @@ namespace AgroServis.Services
             return maintenance.Id;
         }
 
-        public Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            var maintenance = await _context.MaintenanceRecords.FirstOrDefaultAsync(m =>
+                m.Id == id
+            );
+
+            if (maintenance == null)
+            {
+                throw new KeyNotFoundException($"Maintenance with ID {id} not found.");
+            }
+
+            maintenance.DeletedAt = DateTime.UtcNow;
+            maintenance.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            _cache.Remove($"Maintenance_{id}");
+
+            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Maintenance");
         }
 
         public async Task<PagedResult<MaintenanceDto>> GetAllAsync(int page, int pageSize)
@@ -133,7 +148,15 @@ namespace AgroServis.Services
 
         public async Task<MaintenanceDto> GetByIdAsync(int id)
         {
-            return await _context
+            var cacheKey = $"Maintenance_{id}";
+
+            if (_cache.TryGetValue(cacheKey, out MaintenanceDto cached))
+            {
+                _logger.LogDebug("Cache HIT: Maintenance {Id}", id);
+                return cached;
+            }
+
+            var maintenance = await _context
                 .MaintenanceRecords.AsNoTracking()
                 .Where(m => m.Id == id)
                 .Select(m => new MaintenanceDto
@@ -156,6 +179,23 @@ namespace AgroServis.Services
                     UpdatedAt = m.UpdatedAt,
                 })
                 .FirstOrDefaultAsync();
+
+            if (maintenance == null)
+            {
+                throw new EntityNotFoundException("Maintenance", id);
+            }
+
+            _cache.Set(
+                cacheKey,
+                maintenance,
+                new MemoryCacheEntryOptions
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(5),
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15),
+                }
+            );
+
+            return maintenance;
         }
 
         public Task<MaintenanceEditDto> GetByIdForEditAsync(int id)
