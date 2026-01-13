@@ -1,4 +1,5 @@
 ﻿using AgroServis.Services;
+using AgroServis.Services.DTO;
 using AgroServis.Services.DTOs;
 using AgroServis.Services.Exceptions;
 using Humanizer;
@@ -80,23 +81,65 @@ namespace AgroServis.Controllers
         }
 
         // GET: MaintenanceController/Edit/5
-        public ActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            return View();
+            var maintenance = await _service.GetByIdForEditAsync(id);
+            if (maintenance == null)
+            {
+                return NotFound();
+            }
+            return View(maintenance);
         }
 
         // POST: MaintenanceController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(MaintenanceEditDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                // Reload full edit model (so selection lists are populated) and apply attempted values
+                var editDto = await _service.GetByIdForEditAsync(dto.Id);
+
+                editDto.EquipmentId = dto.EquipmentId;
+                editDto.MaintenanceDate = dto.MaintenanceDate;
+                editDto.Description = dto.Description;
+                editDto.Type = dto.Type;
+                editDto.Status = dto.Status;
+                editDto.Cost = dto.Cost;
+                editDto.Notes = dto.Notes;
+                editDto.PerformedBy = dto.PerformedBy;
+
+                // repopulate the equipment list for the view
+                var createModel = await _service.GetForCreateAsync();
+                editDto.AvailableEquipment = createModel.AvailableEquipment;
+
+                return View(editDto);
+            }
+
             try
             {
+                var updateDto = new MaintenanceUpdateDto
+                {
+                    Id = dto.Id,
+                    EquipmentId = dto.EquipmentId,
+                    MaintenanceDate = dto.MaintenanceDate,
+                    Description = dto.Description,
+                    Type = dto.Type,
+                    Status = dto.Status,
+                    Cost = dto.Cost,
+                    Notes = dto.Notes,
+                    PerformedBy = dto.PerformedBy,
+                };
+
+                await _service.UpdateAsync(updateDto);
+
+                TempData["Success"] = "Maintenance record updated successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            catch
+            catch (EntityNotFoundException)
             {
-                return View();
+                return NotFound();
             }
         }
 
