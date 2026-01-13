@@ -198,9 +198,31 @@ namespace AgroServis.Services
             return maintenance;
         }
 
-        public Task<MaintenanceEditDto> GetByIdForEditAsync(int id)
+        public async Task<MaintenanceEditDto> GetByIdForEditAsync(int id)
         {
-            throw new NotImplementedException();
+            var maintenance = await _context.MaintenanceRecords.FirstOrDefaultAsync(e =>
+                e.Id == id
+            );
+
+            if (maintenance == null)
+            {
+                throw new EntityNotFoundException("Maintenance", id);
+            }
+
+            MaintenanceEditDto maintenanceEditDto = new MaintenanceEditDto
+            {
+                Id = maintenance.Id,
+                EquipmentId = maintenance.EquipmentId,
+                MaintenanceDate = maintenance.MaintenanceDate,
+                Description = maintenance.Description,
+                Type = maintenance.Type,
+                Status = maintenance.Status,
+                Cost = maintenance.Cost,
+                Notes = maintenance.Notes,
+                PerformedBy = maintenance.PerformedBy,
+            };
+
+            return maintenanceEditDto;
         }
 
         public async Task<MaintenanceCreateDto> GetForCreateAsync()
