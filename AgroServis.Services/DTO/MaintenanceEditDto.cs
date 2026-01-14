@@ -1,8 +1,8 @@
-﻿using AgroServis.DAL.Enums;
-using AgroServis.Services.DTO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using AgroServis.DAL.Enums;
+using AgroServis.Services.DTO;
 
 namespace AgroServis.Services.DTOs
 {
@@ -11,9 +11,10 @@ namespace AgroServis.Services.DTOs
         [Required]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Please select equipment")]
-        [Display(Name = "Equipment")]
         public int EquipmentId { get; set; }
+
+        [Display(Name = "Equipment")]
+        public string EquipmentName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Maintenance date is required")]
         [Display(Name = "Maintenance Date")]
@@ -21,7 +22,11 @@ namespace AgroServis.Services.DTOs
         public DateTime MaintenanceDate { get; set; }
 
         [Required(ErrorMessage = "Description is required")]
-        [StringLength(500, MinimumLength = 10, ErrorMessage = "Description must be between 10 and 500 characters")]
+        [StringLength(
+            500,
+            MinimumLength = 10,
+            ErrorMessage = "Description must be between 10 and 500 characters"
+        )]
         [Display(Name = "Description")]
         public string Description { get; set; } = string.Empty;
 
@@ -45,7 +50,5 @@ namespace AgroServis.Services.DTOs
         [StringLength(100, ErrorMessage = "Performer name cannot exceed 100 characters")]
         [Display(Name = "Performed By")]
         public string? PerformedBy { get; set; }
-
-        public List<EquipmentDto>? AvailableEquipment { get; set; }
     }
 }
