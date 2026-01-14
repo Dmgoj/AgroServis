@@ -98,7 +98,6 @@ namespace AgroServis.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Reload full edit model (so selection lists are populated) and apply attempted values
                 var editDto = await _service.GetByIdForEditAsync(dto.Id);
 
                 editDto.EquipmentId = dto.EquipmentId;
@@ -110,9 +109,7 @@ namespace AgroServis.Controllers
                 editDto.Notes = dto.Notes;
                 editDto.PerformedBy = dto.PerformedBy;
 
-                // repopulate the equipment list for the view
                 var createModel = await _service.GetForCreateAsync();
-                editDto.AvailableEquipment = createModel.AvailableEquipment;
 
                 return View(editDto);
             }
