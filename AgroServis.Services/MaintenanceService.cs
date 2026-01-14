@@ -200,9 +200,9 @@ namespace AgroServis.Services
 
         public async Task<MaintenanceEditDto> GetByIdForEditAsync(int id)
         {
-            var maintenance = await _context.MaintenanceRecords.FirstOrDefaultAsync(e =>
-                e.Id == id
-            );
+            var maintenance = await _context
+                .MaintenanceRecords.Include(e => e.Equipment)
+                .FirstOrDefaultAsync(m => m.Id == id);
 
             if (maintenance == null)
             {
@@ -213,6 +213,8 @@ namespace AgroServis.Services
             {
                 Id = maintenance.Id,
                 EquipmentId = maintenance.EquipmentId,
+                EquipmentName =
+                    $"{maintenance.Equipment.Manufacturer} {maintenance.Equipment.Model}",
                 MaintenanceDate = maintenance.MaintenanceDate,
                 Description = maintenance.Description,
                 Type = maintenance.Type,
@@ -243,9 +245,34 @@ namespace AgroServis.Services
             return new MaintenanceCreateDto { AvailableEquipment = availableEquipment };
         }
 
-        public Task UpdateAsync(MaintenanceUpdateDto dto)
+        public async Task UpdateAsync(MaintenanceUpdateDto dto)
         {
-            throw new NotImplementedException();
+            _logger.LogDebug("Updating maintenance {Id}", dto.Id);
+
+            var maintenance = await _context.MaintenanceRecords.FindAsync(dto.Id);
+
+            if (maintenance == null)
+            {
+                _logger.LogWarning("Cannot update maintenance {Id} - not found", dto.Id);
+                throw new EntityNotFoundException("Maintenance", dto.Id);
+            }
+
+            maintenance.EquipmentId = dto.EquipmentId;
+            maintenance.MaintenanceDate = dto.MaintenanceDate;
+            maintenance.Description = dto.Description;
+            maintenance.Type = dto.Type;
+            maintenance.Status = dto.Status;
+            maintenance.Cost = dto.Cost;
+            maintenance.Notes = dto.Notes;
+            maintenance.PerformedBy = dto.PerformedBy;
+            maintenance.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _cache.Remove($"Maintenance_{dto.Id}");
+            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Maintenance");
+
+            _logger.LogInformation("Maintenance {Id} updated successfully", dto.Id);
         }
     }
 }
