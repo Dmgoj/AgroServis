@@ -1,8 +1,8 @@
-﻿using AgroServis.DAL.Enums;
-using AgroServis.Services.DTO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using AgroServis.DAL.Enums;
+using AgroServis.Services.DTO;
 
 namespace AgroServis.Services.DTOs
 {
@@ -18,7 +18,11 @@ namespace AgroServis.Services.DTOs
         public DateTime MaintenanceDate { get; set; } = DateTime.Now;
 
         [Required(ErrorMessage = "Description is required")]
-        [StringLength(500, MinimumLength = 10, ErrorMessage = "Description must be between 10 and 500 characters")]
+        [StringLength(
+            500,
+            MinimumLength = 10,
+            ErrorMessage = "Description must be between 10 and 500 characters"
+        )]
         [Display(Name = "Description")]
         public string Description { get; set; } = string.Empty;
 
@@ -30,7 +34,6 @@ namespace AgroServis.Services.DTOs
         [Display(Name = "Status")]
         public MaintenanceStatus Status { get; set; } = MaintenanceStatus.Scheduled;
 
-        [Range(0, 999999.99, ErrorMessage = "Cost must be between 0 and 999,999.99")]
         [Display(Name = "Cost")]
         [DataType(DataType.Currency)]
         public decimal? Cost { get; set; }
