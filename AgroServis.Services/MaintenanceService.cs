@@ -90,43 +90,119 @@ namespace AgroServis.Services
             CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Maintenance");
         }
 
-        public async Task<PagedResult<MaintenanceDto>> GetAllAsync(int page, int pageSize)
+        public async Task<PagedResult<MaintenanceDto>> GetAllAsync(
+            int page,
+            int pageSize,
+            string? sortBy = null,
+            string? sortDir = null
+        )
         {
-            var cacheKey = $"MaintenancePage_{page}_Size_{pageSize}";
+            var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "maintenancedate",
+                "date",
+                "type",
+                "status",
+                "equipment",
+                "createdat",
+            };
+
+            var key = (sortBy ?? "maintenancedate").Trim();
+            if (!allowed.Contains(key))
+                key = "maintenancedate";
+
+            var dir = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase)
+                ? "desc"
+                : "asc";
+            var cacheKey = $"MaintenancePage_{page}_Size_{pageSize}_Sort_{key}_{dir}";
 
             if (
                 _cache.TryGetValue(cacheKey, out PagedResult<MaintenanceDto>? cached)
                 && cached != null
             )
             {
-                _logger.LogDebug("Cache HIT: Maintenance page {Page}", page);
+                _logger.LogDebug(
+                    "Cache HIT: Maintenance page {Page} sort {Key} {Dir}",
+                    page,
+                    key,
+                    dir
+                );
                 return cached;
             }
 
-            _logger.LogDebug("Cache MISS: Maintenance page {Page}, querying database", page);
+            _logger.LogDebug(
+                "Cache MISS: Maintenance page {Page} sort {Key} {Dir}, querying database",
+                page,
+                key,
+                dir
+            );
 
-            var query = _context
-                .MaintenanceRecords.OrderBy(e => e.Id)
-                .Include(m => m.Equipment)
+            var baseQuery = _context
+                .MaintenanceRecords.Include(m => m.Equipment)
                 .ThenInclude(e => e.EquipmentType)
                 .ThenInclude(et => et.EquipmentCategory)
-                .OrderByDescending(m => m.MaintenanceDate)
-                .Select(m => new MaintenanceDto
-                {
-                    Id = m.Id,
-                    EquipmentId = m.EquipmentId,
-                    EquipmentName = $"{m.Equipment.Manufacturer} {m.Equipment.Model}",
-                    EquipmentSerialNumber = m.Equipment.SerialNumber,
-                    MaintenanceDate = m.MaintenanceDate,
-                    Description = m.Description,
-                    Type = m.Type,
-                    Status = m.Status,
-                    Cost = m.Cost,
-                    Notes = m.Notes,
-                    PerformedBy = m.PerformedBy,
-                    CreatedAt = m.CreatedAt,
-                    UpdatedAt = m.UpdatedAt,
-                });
+                .AsQueryable();
+
+            var desc = dir == "desc";
+            switch (key.ToLowerInvariant())
+            {
+                case "date":
+                case "maintenancedate":
+                    baseQuery = desc
+                        ? baseQuery.OrderByDescending(m => m.MaintenanceDate)
+                        : baseQuery.OrderBy(m => m.MaintenanceDate);
+                    break;
+
+                case "type":
+                    baseQuery = desc
+                        ? baseQuery.OrderByDescending(m => m.Type)
+                        : baseQuery.OrderBy(m => m.Type);
+                    break;
+
+                case "status":
+                    baseQuery = desc
+                        ? baseQuery.OrderByDescending(m => m.Status)
+                        : baseQuery.OrderBy(m => m.Status);
+                    break;
+
+                case "equipment":
+                    baseQuery = desc
+                        ? baseQuery
+                            .OrderByDescending(m => m.Equipment.Manufacturer)
+                            .ThenByDescending(m => m.Equipment.Model)
+                        : baseQuery
+                            .OrderBy(m => m.Equipment.Manufacturer)
+                            .ThenBy(m => m.Equipment.Model);
+                    break;
+
+                case "createdat":
+                case "created":
+                    baseQuery = desc
+                        ? baseQuery.OrderByDescending(m => m.CreatedAt)
+                        : baseQuery.OrderBy(m => m.CreatedAt);
+                    break;
+
+                default:
+                    baseQuery = baseQuery.OrderByDescending(m => m.MaintenanceDate);
+                    break;
+            }
+
+            var query = baseQuery.Select(m => new MaintenanceDto
+            {
+                Id = m.Id,
+                EquipmentId = m.EquipmentId,
+                EquipmentName = $"{m.Equipment.Manufacturer} {m.Equipment.Model}",
+                EquipmentSerialNumber = m.Equipment.SerialNumber,
+                MaintenanceDate = m.MaintenanceDate,
+                Description = m.Description,
+                Type = m.Type,
+                Status = m.Status,
+                Cost = m.Cost,
+                Notes = m.Notes,
+                PerformedBy = m.PerformedBy,
+                CreatedAt = m.CreatedAt,
+                UpdatedAt = m.UpdatedAt,
+            });
 
             var result = await _paginationService.GetPagedAsync(query, page, pageSize);
 
@@ -138,7 +214,7 @@ namespace AgroServis.Services
             _cache.Set(cacheKey, result, cacheOptions);
 
             _logger.LogInformation(
-                "Maintenance page {Page} loaded and cached with {Count} items",
+                "Maintenance page {Page} loaded and cached with {Count} items (sorted)",
                 page,
                 result.Items.Count
             );

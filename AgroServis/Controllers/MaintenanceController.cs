@@ -18,13 +18,23 @@ namespace AgroServis.Controllers
         }
 
         // GET: MaintenanceController
-        public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? sortBy = null,
+            string? sortDir = null
+        )
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var maintenances = await _service.GetAllAsync(pageNumber, pageSize);
+
+            var maintenances = await _service.GetAllAsync(pageNumber, pageSize, sortBy, sortDir);
+
+            ViewData["SortBy"] = sortBy ?? "";
+            ViewData["SortDir"] = sortDir ?? "";
+
             return View(maintenances);
         }
 
