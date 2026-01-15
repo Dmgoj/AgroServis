@@ -5,7 +5,12 @@ namespace AgroServis.Services
 {
     public interface IEquipmentService
     {
-        Task<PagedResult<EquipmentDto>> GetAllAsync(int page, int pageSize);
+        Task<PagedResult<EquipmentDto>> GetAllAsync(
+            int page,
+            int pageSize,
+            string? sortBy = null,
+            string? sortDir = null
+        );
         Task<EquipmentDto> GetByIdAsync(int id);
         Task<EquipmentEditDto> GetByIdForEditAsync(int id);
         Task<EquipmentEditDto> GetForCreateAsync();
