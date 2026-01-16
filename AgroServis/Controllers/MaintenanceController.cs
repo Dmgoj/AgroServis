@@ -119,8 +119,6 @@ namespace AgroServis.Controllers
                 editDto.Notes = dto.Notes;
                 editDto.PerformedBy = dto.PerformedBy;
 
-                var createModel = await _service.GetForCreateAsync();
-
                 return View(editDto);
             }
 
