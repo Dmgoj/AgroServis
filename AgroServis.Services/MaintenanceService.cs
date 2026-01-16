@@ -112,7 +112,7 @@ namespace AgroServis.Services
             var dir = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase)
                 ? "desc"
                 : "asc";
-            //var cacheKey = $"MaintenancePage_{page}_Size_{pageSize}_Sort_{key}_{dir}";
+
             var version = CacheVersionHelper.GetVersion(_cache, "Maintenance");
 
             var cacheKey = $"Maintenance_v{version}_Page_{page}_Size_{pageSize}_Sort_{key}_{dir}";
