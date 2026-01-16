@@ -64,7 +64,7 @@ namespace AgroServis.Services
             _context.MaintenanceRecords.Add(maintenance);
             await _context.SaveChangesAsync();
 
-            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Maintenance");
+            CacheVersionHelper.BumpVersion(_cache, "Maintenance", _logger);
             _logger.LogInformation("Maintenance created with ID {Id}", maintenance.Id);
 
             return maintenance.Id;
@@ -85,9 +85,7 @@ namespace AgroServis.Services
             maintenance.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            _cache.Remove($"Maintenance_{id}");
-
-            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Maintenance");
+            CacheVersionHelper.BumpVersion(_cache, "Maintenance", _logger);
         }
 
         public async Task<PagedResult<MaintenanceDto>> GetAllAsync(
@@ -114,8 +112,10 @@ namespace AgroServis.Services
             var dir = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase)
                 ? "desc"
                 : "asc";
-            var cacheKey = $"MaintenancePage_{page}_Size_{pageSize}_Sort_{key}_{dir}";
+            //var cacheKey = $"MaintenancePage_{page}_Size_{pageSize}_Sort_{key}_{dir}";
+            var version = CacheVersionHelper.GetVersion(_cache, "Maintenance");
 
+            var cacheKey = $"Maintenance_v{version}_Page_{page}_Size_{pageSize}_Sort_{key}_{dir}";
             if (
                 _cache.TryGetValue(cacheKey, out PagedResult<MaintenanceDto>? cached)
                 && cached != null
@@ -224,7 +224,8 @@ namespace AgroServis.Services
 
         public async Task<MaintenanceDto> GetByIdAsync(int id)
         {
-            var cacheKey = $"Maintenance_{id}";
+            var version = CacheVersionHelper.GetVersion(_cache, "Maintenance");
+            var cacheKey = $"Maintenance_v{version}_{id}";
 
             if (_cache.TryGetValue(cacheKey, out MaintenanceDto cached))
             {
@@ -345,8 +346,7 @@ namespace AgroServis.Services
 
             await _context.SaveChangesAsync();
 
-            _cache.Remove($"Maintenance_{dto.Id}");
-            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Maintenance");
+            CacheVersionHelper.BumpVersion(_cache, "Maintenance", _logger);
 
             _logger.LogInformation("Maintenance {Id} updated successfully", dto.Id);
         }
