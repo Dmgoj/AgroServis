@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AgroServis.DAL;
 using AgroServis.DAL.Entities;
 using AgroServis.Services.DTO;
+using AgroServis.Services.DTOs;
 using AgroServis.Services.Exceptions;
 using AgroServis.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
@@ -49,9 +50,7 @@ namespace AgroServis.Services
             _context.Remove(forDelete);
             await _context.SaveChangesAsync();
 
-            _cache.Remove($"Equipment_{id}");
-
-            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Equipment");
+            CacheVersionHelper.BumpVersion(_cache, "Equipment", _logger);
 
             _logger.LogInformation(
                 "Equipment {Id} ({Manufacturer} {Model}) deleted",
@@ -61,64 +60,64 @@ namespace AgroServis.Services
             );
         }
 
-        public async Task<PagedResult<EquipmentDto>> GetAllAsync(int page, int pageSize)
-        {
-            var cacheKey = $"EquipmentPage_{page}_Size_{pageSize}";
+        //public async Task<PagedResult<EquipmentDto>> GetAllAsync(int page, int pageSize)
+        //{
+        //    var cacheKey = $"EquipmentPage_{page}_Size_{pageSize}";
 
-            if (
-                _cache.TryGetValue(cacheKey, out PagedResult<EquipmentDto>? cachedResult)
-                && cachedResult != null
-            )
-            {
-                _logger.LogDebug(
-                    "Cache HIT: Returning page {Page} (size {PageSize}) from cache",
-                    page,
-                    pageSize
-                );
-                return cachedResult!;
-            }
+        //    if (
+        //        _cache.TryGetValue(cacheKey, out PagedResult<EquipmentDto>? cachedResult)
+        //        && cachedResult != null
+        //    )
+        //    {
+        //        _logger.LogDebug(
+        //            "Cache HIT: Returning page {Page} (size {PageSize}) from cache",
+        //            page,
+        //            pageSize
+        //        );
+        //        return cachedResult!;
+        //    }
 
-            _logger.LogDebug(
-                "Cache MISS: Loading page {Page} (size {PageSize}) from database",
-                page,
-                pageSize
-            );
+        //    _logger.LogDebug(
+        //        "Cache MISS: Loading page {Page} (size {PageSize}) from database",
+        //        page,
+        //        pageSize
+        //    );
 
-            var query = _context
-                .Equipment.OrderBy(e => e.Id)
-                .Select(e => new EquipmentDto
-                {
-                    Id = e.Id,
-                    Manufacturer = e.Manufacturer,
-                    Model = e.Model,
-                    SerialNumber = e.SerialNumber,
-                    EquipmentTypeId = e.EquipmentTypeId,
-                    EquipmentType = e.EquipmentType.Type,
-                    EquipmentCategory = e.EquipmentType.EquipmentCategory.Category,
-                    LastMaintenanceDate = e
-                        .MaintenanceRecords.OrderByDescending(m => m.MaintenanceDate)
-                        .Select(m => (DateTime?)m.MaintenanceDate)
-                        .FirstOrDefault(),
-                });
+        //    var query = _context
+        //        .Equipment.OrderBy(e => e.Id)
+        //        .Select(e => new EquipmentDto
+        //        {
+        //            Id = e.Id,
+        //            Manufacturer = e.Manufacturer,
+        //            Model = e.Model,
+        //            SerialNumber = e.SerialNumber,
+        //            EquipmentTypeId = e.EquipmentTypeId,
+        //            EquipmentType = e.EquipmentType.Type,
+        //            EquipmentCategory = e.EquipmentType.EquipmentCategory.Category,
+        //            LastMaintenanceDate = e
+        //                .MaintenanceRecords.OrderByDescending(m => m.MaintenanceDate)
+        //                .Select(m => (DateTime?)m.MaintenanceDate)
+        //                .FirstOrDefault(),
+        //        });
 
-            var pagedResult = await _paginationService.GetPagedAsync(query, page, pageSize);
+        //    var pagedResult = await _paginationService.GetPagedAsync(query, page, pageSize);
 
-            var options = new MemoryCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromMinutes(10))
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(30))
-                .SetPriority(CacheItemPriority.Low);
+        //    var options = new MemoryCacheEntryOptions()
+        //        .SetSlidingExpiration(TimeSpan.FromMinutes(10))
+        //        .SetAbsoluteExpiration(TimeSpan.FromMinutes(30))
+        //        .SetPriority(CacheItemPriority.Low);
 
-            _cache.Set(cacheKey, pagedResult, options);
+        //    _cache.Set(cacheKey, pagedResult, options);
 
-            _logger.LogInformation(
-                "Loaded equipment page {Page} with {ItemCount}/{TotalItems} items",
-                page,
-                pagedResult.Items.Count,
-                pagedResult.TotalItems
-            );
+        //    _logger.LogInformation(
+        //        "Loaded equipment page {Page} with {ItemCount}/{TotalItems} items",
+        //        page,
+        //        pagedResult.Items.Count,
+        //        pagedResult.TotalItems
+        //    );
 
-            return pagedResult;
-        }
+        //    return pagedResult;
+        //}
 
         public async Task<PagedResult<EquipmentDto>> GetAllAsync(
             int page,
@@ -144,8 +143,9 @@ namespace AgroServis.Services
             var dir = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase)
                 ? "desc"
                 : "asc";
-            var cacheKey = $"EquipmentPage_{page}_Size_{pageSize}_Sort_{key}_{dir}";
+            var version = CacheVersionHelper.GetVersion(_cache, "Equipment");
 
+            var cacheKey = $"Equipment_v{version}_Page_{page}_Size_{pageSize}_Sort_{key}_{dir}";
             if (
                 _cache.TryGetValue(cacheKey, out PagedResult<EquipmentDto>? cached)
                 && cached != null
@@ -258,15 +258,13 @@ namespace AgroServis.Services
 
         public async Task<EquipmentDto> GetByIdAsync(int id)
         {
-            var cacheKey = $"Equipment_{id}";
+            var version = CacheVersionHelper.GetVersion(_cache, "Equipment");
+            var cacheKey = $"Equipment_v{version}_{id}";
 
-            if (
-                _cache.TryGetValue(cacheKey, out EquipmentDto? cachedResult)
-                && cachedResult != null
-            )
+            if (_cache.TryGetValue(cacheKey, out EquipmentDto cached))
             {
                 _logger.LogDebug("Cache HIT: Equipment {Id}", id);
-                return cachedResult!;
+                return cached!;
             }
 
             var equipment = await _context
@@ -379,7 +377,7 @@ namespace AgroServis.Services
             _context.Equipment.Add(equipment);
             await _context.SaveChangesAsync();
 
-            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Equipment");
+            CacheVersionHelper.BumpVersion(_cache, "Equipment", _logger);
 
             _logger.LogInformation("Equipment created with ID {Id}", equipment.Id);
 
@@ -404,9 +402,7 @@ namespace AgroServis.Services
             equipment.EquipmentTypeId = dto.EquipmentTypeId;
 
             await _context.SaveChangesAsync();
-            _cache.Remove($"Equipment_{dto.Id}");
-
-            CacheHelper.InvalidatePaginationCaches(_cache, _logger, "Equipment");
+            CacheVersionHelper.BumpVersion(_cache, "Equipment", _logger);
 
             _logger.LogInformation("Equipment {Id} updated successfully", dto.Id);
         }
