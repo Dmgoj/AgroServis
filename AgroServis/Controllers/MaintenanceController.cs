@@ -108,18 +108,7 @@ namespace AgroServis.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var editDto = await _service.GetByIdForEditAsync(dto.Id);
-
-                editDto.EquipmentId = dto.EquipmentId;
-                editDto.MaintenanceDate = dto.MaintenanceDate;
-                editDto.Description = dto.Description;
-                editDto.Type = dto.Type;
-                editDto.Status = dto.Status;
-                editDto.Cost = dto.Cost;
-                editDto.Notes = dto.Notes;
-                editDto.PerformedBy = dto.PerformedBy;
-
-                return View(editDto);
+                return View(dto);
             }
 
             try
