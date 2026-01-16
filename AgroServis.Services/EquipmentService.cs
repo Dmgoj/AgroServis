@@ -60,65 +60,6 @@ namespace AgroServis.Services
             );
         }
 
-        //public async Task<PagedResult<EquipmentDto>> GetAllAsync(int page, int pageSize)
-        //{
-        //    var cacheKey = $"EquipmentPage_{page}_Size_{pageSize}";
-
-        //    if (
-        //        _cache.TryGetValue(cacheKey, out PagedResult<EquipmentDto>? cachedResult)
-        //        && cachedResult != null
-        //    )
-        //    {
-        //        _logger.LogDebug(
-        //            "Cache HIT: Returning page {Page} (size {PageSize}) from cache",
-        //            page,
-        //            pageSize
-        //        );
-        //        return cachedResult!;
-        //    }
-
-        //    _logger.LogDebug(
-        //        "Cache MISS: Loading page {Page} (size {PageSize}) from database",
-        //        page,
-        //        pageSize
-        //    );
-
-        //    var query = _context
-        //        .Equipment.OrderBy(e => e.Id)
-        //        .Select(e => new EquipmentDto
-        //        {
-        //            Id = e.Id,
-        //            Manufacturer = e.Manufacturer,
-        //            Model = e.Model,
-        //            SerialNumber = e.SerialNumber,
-        //            EquipmentTypeId = e.EquipmentTypeId,
-        //            EquipmentType = e.EquipmentType.Type,
-        //            EquipmentCategory = e.EquipmentType.EquipmentCategory.Category,
-        //            LastMaintenanceDate = e
-        //                .MaintenanceRecords.OrderByDescending(m => m.MaintenanceDate)
-        //                .Select(m => (DateTime?)m.MaintenanceDate)
-        //                .FirstOrDefault(),
-        //        });
-
-        //    var pagedResult = await _paginationService.GetPagedAsync(query, page, pageSize);
-
-        //    var options = new MemoryCacheEntryOptions()
-        //        .SetSlidingExpiration(TimeSpan.FromMinutes(10))
-        //        .SetAbsoluteExpiration(TimeSpan.FromMinutes(30))
-        //        .SetPriority(CacheItemPriority.Low);
-
-        //    _cache.Set(cacheKey, pagedResult, options);
-
-        //    _logger.LogInformation(
-        //        "Loaded equipment page {Page} with {ItemCount}/{TotalItems} items",
-        //        page,
-        //        pagedResult.Items.Count,
-        //        pagedResult.TotalItems
-        //    );
-
-        //    return pagedResult;
-        //}
-
         public async Task<PagedResult<EquipmentDto>> GetAllAsync(
             int page,
             int pageSize,
