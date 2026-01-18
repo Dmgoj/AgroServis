@@ -1,7 +1,12 @@
 ﻿@model AgroServis.Services.DTO.PagedResult<AgroServis.Services.DTO.EquipmentDto>
+@using AgroServis.DAL.Entities
+
 @{
     var currentSort = (ViewData["SortBy"] as string) ?? "";
     var currentDir = (ViewData["SortDir"] as string) ?? "";
+    var currentSearch = (ViewData["Search"] as string) ?? "";
+    var currentTypeId = (ViewData["EquipmentTypeId"] as string) ?? "";
+    var currentCategoryId = (ViewData["CategoryId"] as string) ?? "";
 
     int pageNumber = int.TryParse(ViewContext.HttpContext.Request.Query["pageNumber"].FirstOrDefault(), out var pn) ? pn : Model.PageNumber;
     int pageSize = int.TryParse(ViewContext.HttpContext.Request.Query["pageSize"].FirstOrDefault(), out var ps) ? ps : Model.PageSize;
@@ -14,6 +19,43 @@
 }
 
 <h2>Equipment</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <input type="hidden" name="pageNumber" value="1" />
+    <input type="hidden" name="pageSize" value="@pageSize" />
+    <input type="hidden" name="sortBy" value="@currentSort" />
+    <input type="hidden" name="sortDir" value="@currentDir" />
+
+    <div class="col-auto">
+        <input name="search" value="@currentSearch" class="form-control" placeholder="Search manufacturer, model, serial..." />
+    </div>
+
+    <div class="col-auto">
+        <select name="equipmentTypeId" class="form-select">
+            <option value="">All types</option>
+            @foreach (var t in (IEnumerable<EquipmentType>?)ViewBag.EquipmentTypes ?? Enumerable.Empty<EquipmentType>())
+            {
+                <option value="@t.Id" selected="@(t.Id.ToString() == currentTypeId ? "selected" : null)">@t.Type</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <select name="categoryId" class="form-select">
+            <option value="">All categories</option>
+            @foreach (var c in (IEnumerable<AgroServis.DAL.Entities.EquipmentCategory>?)ViewBag.EquipmentCategories ?? Enumerable.Empty<AgroServis.DAL.Entities.EquipmentCategory>())
+            {
+                <option value="@c.Id" selected="@(c.Id.ToString() == currentCategoryId ? "selected" : null)">@c.Category</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <button class="btn btn-primary" type="submit">Filter</button>
+        <a asp-action="Index" class="btn btn-link">Reset</a>
+    </div>
+</form>
+
 <table class="table table-striped">
     <thead>
         <tr>
@@ -22,33 +64,36 @@
                    asp-route-pageNumber="@(pageNumber)"
                    asp-route-pageSize="@(pageSize)"
                    asp-route-sortBy="id"
-                   asp-route-sortDir="@(nextDir("id"))">
+                   asp-route-sortDir="@(nextDir("id"))"
+                   asp-route-search="@currentSearch"
+                   asp-route-equipmentTypeId="@currentTypeId"
+                   asp-route-categoryId="@currentCategoryId">
                     Id@(sortIndicator("id"))
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="manufacturer" asp-route-sortDir="@(nextDir("manufacturer"))">
+                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="manufacturer" asp-route-sortDir="@(nextDir("manufacturer"))" asp-route-search="@currentSearch" asp-route-equipmentTypeId="@currentTypeId" asp-route-categoryId="@currentCategoryId">
                     Manufacturer@(sortIndicator("manufacturer"))
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="model" asp-route-sortDir="@(nextDir("model"))">
+                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="model" asp-route-sortDir="@(nextDir("model"))" asp-route-search="@currentSearch" asp-route-equipmentTypeId="@currentTypeId" asp-route-categoryId="@currentCategoryId">
                     Model@(sortIndicator("model"))
                 </a>
             </th>
             <th>SerialNumber</th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="type" asp-route-sortDir="@(nextDir("type"))">
+                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="type" asp-route-sortDir="@(nextDir("type"))" asp-route-search="@currentSearch" asp-route-equipmentTypeId="@currentTypeId" asp-route-categoryId="@currentCategoryId">
                     Type@(sortIndicator("type"))
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="category" asp-route-sortDir="@(nextDir("category"))">
+                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="category" asp-route-sortDir="@(nextDir("category"))" asp-route-search="@currentSearch" asp-route-equipmentTypeId="@currentTypeId" asp-route-categoryId="@currentCategoryId">
                     Category@(sortIndicator("category"))
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="lastmaintenance" asp-route-sortDir="@(nextDir("lastmaintenance"))">
+                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="lastmaintenance" asp-route-sortDir="@(nextDir("lastmaintenance"))" asp-route-search="@currentSearch" asp-route-equipmentTypeId="@currentTypeId" asp-route-categoryId="@currentCategoryId">
                     Last Maintenance@(sortIndicator("lastmaintenance"))
                 </a>
             </th>
@@ -69,11 +114,13 @@
                 <td>
                     <a asp-controller="Equipment" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
                     <form asp-controller="Equipment" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this item?');">
                             Delete
                         </button>
-                        @Html.AntiForgeryToken()
                     </form>
+                    <a asp-controller="Maintenance" asp-action="Create" asp-route-equipmentId="@item.Id" class="btn btn-primary">Maintain</a>
+
                 </td>
             </tr>
         }

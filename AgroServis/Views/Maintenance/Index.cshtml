@@ -5,36 +5,121 @@
     ViewData["Title"] = "Maintenances";
     var currentSort = (ViewData["SortBy"] as string) ?? "";
     var currentDir = (ViewData["SortDir"] as string) ?? "";
-    int pageNumber = (int)(ViewContext.HttpContext.Request.Query["pageNumber"].FirstOrDefault() is string p && int.TryParse(p, out var pn) ? pn : Model.PageNumber);
-    int pageSize = (int)(ViewContext.HttpContext.Request.Query["pageSize"].FirstOrDefault() is string s && int.TryParse(s, out var ps) ? ps : Model.PageSize);
+    var currentSearch = (ViewData["Search"] as string) ?? "";
+    var currentEquipmentId = (ViewData["EquipmentId"] as string) ?? "";
+    var currentType = (ViewData["Type"] as string) ?? "";
+    var currentStatus = (ViewData["Status"] as string) ?? "";
+    var currentDateFrom = (ViewData["DateFrom"] as string) ?? "";
+    var currentDateTo = (ViewData["DateTo"] as string) ?? "";
+
+    int pageNumber = int.TryParse(ViewContext.HttpContext.Request.Query["pageNumber"].FirstOrDefault(), out var pn) ? pn : Model.PageNumber;
+    int pageSize = int.TryParse(ViewContext.HttpContext.Request.Query["pageSize"].FirstOrDefault(), out var ps) ? ps : Model.PageSize;
+
     Func<string, string> nextDir = key => (string.Equals(currentSort, key, StringComparison.OrdinalIgnoreCase) && currentDir != "desc") ? "desc" : "asc";
-    Func<string, object> sortIndicator = key =>
+    Func<string, string> sortIndicator = key =>
         string.Equals(currentSort, key, StringComparison.OrdinalIgnoreCase)
             ? (currentDir == "desc" ? " ▼" : " ▲")
             : "";
 }
 
-<h2>Maintenances</h2>
-<table class="table table-striped table-bordered">
+<h2>Maintenance</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <input type="hidden" name="pageNumber" value="1" />
+    <input type="hidden" name="pageSize" value="@pageSize" />
+    <input type="hidden" name="sortBy" value="@currentSort" />
+    <input type="hidden" name="sortDir" value="@currentDir" />
+
+    <div class="col-auto">
+        <input name="search" value="@currentSearch" class="form-control" placeholder="Search description, notes, performer..." />
+    </div>
+
+    <div class="col-auto">
+        <select name="equipmentId" class="form-select">
+            <option value="">All equipment</option>
+            @foreach (var e in (IEnumerable<AgroServis.Services.DTO.EquipmentDto>?)ViewBag.AvailableEquipment ?? Enumerable.Empty<AgroServis.Services.DTO.EquipmentDto>())
+            {
+                <option value="@e.Id" selected="@(e.Id.ToString() == currentEquipmentId ? "selected" : null)">@($"{e.Manufacturer} {e.Model} (SN: {e.SerialNumber})")</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <select name="type" class="form-select">
+            <option value="">All types</option>
+            @foreach (var t in Html.GetEnumSelectList<MaintenanceType>())
+            {
+                <option value="@t.Value" selected="@(t.Value == currentType ? "selected" : null)">@t.Text</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <select name="status" class="form-select">
+            <option value="">All statuses</option>
+            @foreach (var s in Html.GetEnumSelectList<MaintenanceStatus>())
+            {
+                <option value="@s.Value" selected="@(s.Value == currentStatus ? "selected" : null)">@s.Text</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <input type="date" name="dateFrom" value="@currentDateFrom" class="form-control" />
+    </div>
+
+    <div class="col-auto">
+        <input type="date" name="dateTo" value="@currentDateTo" class="form-control" />
+    </div>
+
+    <div class="col-auto">
+        <button class="btn btn-primary" type="submit">Filter</button>
+        <a asp-action="Index" class="btn btn-link">Reset</a>
+    </div>
+</form>
+
+<table class="table table-striped">
     <thead>
         <tr>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="maintenancedate" asp-route-sortDir="@(nextDir("maintenancedate"))">
+                <a asp-action="Index"
+                   asp-route-pageNumber="@(pageNumber)"
+                   asp-route-pageSize="@(pageSize)"
+                   asp-route-sortBy="maintenancedate"
+                   asp-route-sortDir="@(nextDir("maintenancedate"))"
+                   asp-route-search="@currentSearch"
+                   asp-route-equipmentId="@currentEquipmentId"
+                   asp-route-type="@currentType"
+                   asp-route-status="@currentStatus"
+                   asp-route-dateFrom="@currentDateFrom"
+                   asp-route-dateTo="@currentDateTo">
                     Date@(sortIndicator("maintenancedate"))
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="equipment" asp-route-sortDir="@(nextDir("equipment"))">
+                <a asp-action="Index"
+                   asp-route-pageNumber="@(pageNumber)"
+                   asp-route-pageSize="@(pageSize)"
+                   asp-route-sortBy="equipment"
+                   asp-route-sortDir="@(nextDir("equipment"))"
+                   asp-route-search="@currentSearch"
+                   asp-route-equipmentId="@currentEquipmentId"
+                   asp-route-type="@currentType"
+                   asp-route-status="@currentStatus"
+                   asp-route-dateFrom="@currentDateFrom"
+                   asp-route-dateTo="@currentDateTo">
                     Equipment@(sortIndicator("equipment"))
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="type" asp-route-sortDir="@(nextDir("type"))">
+                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="type" asp-route-sortDir="@(nextDir("type"))"
+                   asp-route-search="@currentSearch" asp-route-equipmentId="@currentEquipmentId" asp-route-type="@currentType" asp-route-status="@currentStatus" asp-route-dateFrom="@currentDateFrom" asp-route-dateTo="@currentDateTo">
                     Type@(sortIndicator("type"))
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="status" asp-route-sortDir="@(nextDir("status"))">
+                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="status" asp-route-sortDir="@(nextDir("status"))"
+                   asp-route-search="@currentSearch" asp-route-equipmentId="@currentEquipmentId" asp-route-type="@currentType" asp-route-status="@currentStatus" asp-route-dateFrom="@currentDateFrom" asp-route-dateTo="@currentDateTo">
                     Status@(sortIndicator("status"))
                 </a>
             </th>
