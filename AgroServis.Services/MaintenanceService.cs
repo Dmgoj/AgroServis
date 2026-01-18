@@ -92,50 +92,39 @@ namespace AgroServis.Services
             int page,
             int pageSize,
             string? sortBy = null,
-            string? sortDir = null
+            string? sortDir = null,
+            string? search = null,
+            int? equipmentId = null,
+            string? type = null,
+            string? status = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null
         )
         {
             var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 "maintenancedate",
-                "date",
                 "type",
                 "status",
                 "equipment",
                 "createdat",
             };
-
             var key = (sortBy ?? "maintenancedate").Trim();
             if (!allowed.Contains(key))
                 key = "maintenancedate";
-
             var dir = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase)
                 ? "desc"
                 : "asc";
+            var cacheKey =
+                $"MaintenancePage_{page}_Size_{pageSize}_Sort_{key}_{dir}_Q_{(search ?? "")}_E_{(equipmentId?.ToString() ?? "")}_T_{(type ?? "")}_S_{(status ?? "")}_DF_{(dateFrom?.ToString("s") ?? "")}_DT_{(dateTo?.ToString("s") ?? "")}";
 
-            var version = CacheVersionHelper.GetVersion(_cache, "Maintenance");
-
-            var cacheKey = $"Maintenance_v{version}_Page_{page}_Size_{pageSize}_Sort_{key}_{dir}";
             if (
                 _cache.TryGetValue(cacheKey, out PagedResult<MaintenanceDto>? cached)
                 && cached != null
             )
             {
-                _logger.LogDebug(
-                    "Cache HIT: Maintenance page {Page} sort {Key} {Dir}",
-                    page,
-                    key,
-                    dir
-                );
                 return cached;
             }
-
-            _logger.LogDebug(
-                "Cache MISS: Maintenance page {Page} sort {Key} {Dir}, querying database",
-                page,
-                key,
-                dir
-            );
 
             var baseQuery = _context
                 .MaintenanceRecords.Include(m => m.Equipment)
@@ -143,10 +132,30 @@ namespace AgroServis.Services
                 .ThenInclude(et => et.EquipmentCategory)
                 .AsQueryable();
 
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim();
+                baseQuery = baseQuery.Where(m =>
+                    EF.Functions.Like(m.Description, $"%{s}%")
+                    || EF.Functions.Like(m.Notes, $"%{s}%")
+                    || EF.Functions.Like(m.PerformedBy, $"%{s}%")
+                );
+            }
+
+            if (equipmentId.HasValue)
+                baseQuery = baseQuery.Where(m => m.EquipmentId == equipmentId.Value);
+            if (!string.IsNullOrWhiteSpace(type))
+                baseQuery = baseQuery.Where(m => m.Type.ToString() == type);
+            if (!string.IsNullOrWhiteSpace(status))
+                baseQuery = baseQuery.Where(m => m.Status.ToString() == status);
+            if (dateFrom.HasValue)
+                baseQuery = baseQuery.Where(m => m.MaintenanceDate >= dateFrom.Value);
+            if (dateTo.HasValue)
+                baseQuery = baseQuery.Where(m => m.MaintenanceDate <= dateTo.Value);
+
             var desc = dir == "desc";
             switch (key.ToLowerInvariant())
             {
-                case "date":
                 case "maintenancedate":
                     baseQuery = desc
                         ? baseQuery.OrderByDescending(m => m.MaintenanceDate)
@@ -176,7 +185,6 @@ namespace AgroServis.Services
                     break;
 
                 case "createdat":
-                case "created":
                     baseQuery = desc
                         ? baseQuery.OrderByDescending(m => m.CreatedAt)
                         : baseQuery.OrderBy(m => m.CreatedAt);
@@ -212,13 +220,6 @@ namespace AgroServis.Services
                 .SetPriority(CacheItemPriority.Low);
 
             _cache.Set(cacheKey, result, cacheOptions);
-
-            _logger.LogInformation(
-                "Maintenance page {Page} loaded and cached with {Count} items (sorted)",
-                page,
-                result.Items.Count
-            );
-
             return result;
         }
 

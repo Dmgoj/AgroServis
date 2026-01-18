@@ -64,7 +64,10 @@ namespace AgroServis.Services
             int page,
             int pageSize,
             string? sortBy = null,
-            string? sortDir = null
+            string? sortDir = null,
+            string? search = null,
+            int? equipmentTypeId = null,
+            int? categoryId = null
         )
         {
             var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -80,23 +83,24 @@ namespace AgroServis.Services
             var key = (sortBy ?? "id").Trim();
             if (!allowed.Contains(key))
                 key = "id";
-
             var dir = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase)
                 ? "desc"
                 : "asc";
-            var version = CacheVersionHelper.GetVersion(_cache, "Equipment");
 
-            var cacheKey = $"Equipment_v{version}_Page_{page}_Size_{pageSize}_Sort_{key}_{dir}";
+            var cacheKey =
+                $"EquipmentPage_{page}_Size_{pageSize}_Sort_{key}_{dir}_Q_{(search ?? "")}_T_{(equipmentTypeId?.ToString() ?? "")}_C_{(categoryId?.ToString() ?? "")}";
+
             if (
                 _cache.TryGetValue(cacheKey, out PagedResult<EquipmentDto>? cached)
                 && cached != null
             )
             {
                 _logger.LogDebug(
-                    "Cache HIT: Returning equipment page {Page} sort {Key} {Dir}",
+                    "Cache HIT: Returning equipment page {Page} sort {Key} {Dir} search {Search}",
                     page,
                     key,
-                    dir
+                    dir,
+                    search
                 );
                 return cached;
             }
@@ -112,6 +116,29 @@ namespace AgroServis.Services
                 .Equipment.Include(e => e.EquipmentType)
                 .ThenInclude(et => et.EquipmentCategory)
                 .AsQueryable();
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim();
+                baseQuery = baseQuery.Where(e =>
+                    EF.Functions.Like(e.Manufacturer, $"%{s}%")
+                    || EF.Functions.Like(e.Model, $"%{s}%")
+                    || EF.Functions.Like(e.SerialNumber, $"%{s}%")
+                );
+            }
+
+            if (equipmentTypeId.HasValue)
+            {
+                baseQuery = baseQuery.Where(e => e.EquipmentTypeId == equipmentTypeId.Value);
+            }
+
+            if (categoryId.HasValue)
+            {
+                baseQuery = baseQuery.Where(e =>
+                    e.EquipmentType.EquipmentCategory.Id == categoryId.Value
+                );
+            }
 
             var desc = dir == "desc";
             switch (key.ToLowerInvariant())
