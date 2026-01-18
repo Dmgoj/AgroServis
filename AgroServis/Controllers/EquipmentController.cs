@@ -18,18 +18,32 @@ namespace AgroServis.Controllers
             int pageNumber = 1,
             int pageSize = 10,
             string? sortBy = null,
-            string? sortDir = null
+            string? sortDir = null,
+            string? search = null,
+            int? equipmentTypeId = null,
+            int? categoryId = null
         )
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var equipment = await _service.GetAllAsync(
+                pageNumber,
+                pageSize,
+                sortBy,
+                sortDir,
+                search,
+                equipmentTypeId,
+                categoryId
+            );
 
-            var equipment = await _service.GetAllAsync(pageNumber, pageSize, sortBy, sortDir);
+            var createModel = await _service.GetForCreateAsync();
+            ViewBag.EquipmentTypes = createModel.EquipmentTypes ?? Enumerable.Empty<object>();
+            ViewBag.EquipmentCategories =
+                createModel.EquipmentCategories ?? Enumerable.Empty<object>();
 
             ViewData["SortBy"] = sortBy ?? "";
             ViewData["SortDir"] = sortDir ?? "";
+            ViewData["Search"] = search ?? "";
+            ViewData["EquipmentTypeId"] = equipmentTypeId?.ToString() ?? "";
+            ViewData["CategoryId"] = categoryId?.ToString() ?? "";
 
             return View(equipment);
         }

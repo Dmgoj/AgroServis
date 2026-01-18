@@ -22,18 +22,41 @@ namespace AgroServis.Controllers
             int pageNumber = 1,
             int pageSize = 10,
             string? sortBy = null,
-            string? sortDir = null
+            string? sortDir = null,
+            string? search = null,
+            int? equipmentId = null,
+            string? type = null,
+            string? status = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null
         )
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var maintenances = await _service.GetAllAsync(
+                pageNumber,
+                pageSize,
+                sortBy,
+                sortDir,
+                search,
+                equipmentId,
+                type,
+                status,
+                dateFrom,
+                dateTo
+            );
 
-            var maintenances = await _service.GetAllAsync(pageNumber, pageSize, sortBy, sortDir);
+            var createModel = await _service.GetForCreateAsync();
+            ViewBag.AvailableEquipment =
+                createModel.AvailableEquipment
+                ?? Enumerable.Empty<AgroServis.Services.DTO.EquipmentDto>();
 
             ViewData["SortBy"] = sortBy ?? "";
             ViewData["SortDir"] = sortDir ?? "";
+            ViewData["Search"] = search ?? "";
+            ViewData["EquipmentId"] = equipmentId?.ToString() ?? "";
+            ViewData["Type"] = type ?? "";
+            ViewData["Status"] = status ?? "";
+            ViewData["DateFrom"] = dateFrom?.ToString("yyyy-MM-dd") ?? "";
+            ViewData["DateTo"] = dateTo?.ToString("yyyy-MM-dd") ?? "";
 
             return View(maintenances);
         }
