@@ -9,8 +9,12 @@ namespace AgroServis.Services
             int page,
             int pageSize,
             string? sortBy = null,
-            string? sortDir = null
+            string? sortDir = null,
+            string? search = null,
+            int? equipmentTypeId = null,
+            int? categoryId = null
         );
+
         Task<EquipmentDto> GetByIdAsync(int id);
         Task<EquipmentEditDto> GetByIdForEditAsync(int id);
         Task<EquipmentEditDto> GetForCreateAsync();
