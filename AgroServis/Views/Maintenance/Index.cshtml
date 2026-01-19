@@ -131,7 +131,7 @@
         @foreach (var item in Model.Items)
         {
             <tr>
-                <td>@item.MaintenanceDate.ToString("yyyy-MM-dd")</td>
+                <td>@item.FormattedDate</td>
                 <td>@item.EquipmentName</td>
                 <td>@item.Type</td>
                 <td>@item.Status</td>
