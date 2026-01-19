@@ -103,14 +103,14 @@
     <tbody>
         @foreach (var item in Model.Items)
         {
-            <tr>
+            <tr class="@(item.IsMaintenanceDue ? "table-danger bi bi-wrench-fill" : "")">
                 <td>@item.Id</td>
                 <td>@item.Manufacturer</td>
                 <td>@item.Model</td>
                 <td>@item.SerialNumber</td>
                 <td>@item.EquipmentType</td>
                 <td>@item.EquipmentCategory</td>
-                <td>@(item.LastMaintenanceDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                <td>@(item.FormattedLastMaintenanceDate)</td>
                 <td>
                     <a asp-controller="Equipment" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
                     <form asp-controller="Equipment" asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
@@ -120,7 +120,6 @@
                         </button>
                     </form>
                     <a asp-controller="Maintenance" asp-action="Create" asp-route-equipmentId="@item.Id" class="btn btn-primary">Maintain</a>
-
                 </td>
             </tr>
         }
