@@ -10,7 +10,7 @@ public record EquipmentDto
     public string EquipmentType { get; set; } = string.Empty;
     public string EquipmentCategory { get; set; } = string.Empty;
     public DateTime? LastMaintenanceDate { get; set; }
-    public int MaintenanceIntervalMonths { get; set; }
+    public int MaintenanceIntervalMonths { get; set; } = 12;
     public bool IsMaintenanceDue =>
         !LastMaintenanceDate.HasValue
         || LastMaintenanceDate.Value.AddMonths(MaintenanceIntervalMonths) <= DateTime.UtcNow;
