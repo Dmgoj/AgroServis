@@ -10,9 +10,11 @@ public record EquipmentDto
     public string EquipmentType { get; set; } = string.Empty;
     public string EquipmentCategory { get; set; } = string.Empty;
     public DateTime? LastMaintenanceDate { get; set; }
+    public int MaintenanceIntervalMonths { get; set; }
     public bool IsMaintenanceDue =>
-          !LastMaintenanceDate.HasValue ||
-          LastMaintenanceDate.Value.AddYears(1) <= DateTime.UtcNow;
+        !LastMaintenanceDate.HasValue
+        || LastMaintenanceDate.Value.AddMonths(MaintenanceIntervalMonths) <= DateTime.UtcNow;
 
-    public string FormattedLastMaintenanceDate => LastMaintenanceDate.HasValue ? LastMaintenanceDate.Value.ToString("dd-MM-yyyy") : "N/A";
+    public string FormattedLastMaintenanceDate =>
+        LastMaintenanceDate.HasValue ? LastMaintenanceDate.Value.ToString("dd-MM-yyyy") : "N/A";
 }
