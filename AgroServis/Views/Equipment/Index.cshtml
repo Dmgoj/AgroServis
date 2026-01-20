@@ -103,7 +103,7 @@
     <tbody>
         @foreach (var item in Model.Items)
         {
-            <tr class="@(item.IsMaintenanceDue ? "table-danger bi bi-wrench-fill" : "")">
+            <tr class="@(item.IsMaintenanceDue ? "table-danger" : "")">
                 <td>@item.Id</td>
                 <td>@item.Manufacturer</td>
                 <td>@item.Model</td>
