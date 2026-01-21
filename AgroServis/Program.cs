@@ -34,6 +34,8 @@ builder
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddRazorPages();
+
 //builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
@@ -67,6 +69,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
