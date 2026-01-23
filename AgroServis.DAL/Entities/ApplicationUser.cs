@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
+namespace AgroServis.DAL.Entities;
+
 public class ApplicationUser : IdentityUser
 {
     public string FirstName { get; set; }
