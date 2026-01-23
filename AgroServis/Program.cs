@@ -1,4 +1,5 @@
 using AgroServis.DAL;
+using AgroServis.DAL.Entities;
 using AgroServis.DAL.Seeding;
 using AgroServis.Middleware;
 using AgroServis.Services;
@@ -24,6 +25,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
             }
         )
 );
+
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder
