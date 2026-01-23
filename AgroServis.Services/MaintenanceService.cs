@@ -63,7 +63,7 @@ namespace AgroServis.Services
 
             _context.MaintenanceRecords.Add(maintenance);
             await _context.SaveChangesAsync();
-
+            CacheVersionHelper.BumpVersion(_cache, "Equipment", _logger);
             CacheVersionHelper.BumpVersion(_cache, "Maintenance", _logger);
             _logger.LogInformation("Maintenance created with ID {Id}", maintenance.Id);
 

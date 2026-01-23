@@ -87,8 +87,10 @@ namespace AgroServis.Services
                 ? "desc"
                 : "asc";
 
+            var equipmentVersion = CacheVersionHelper.GetVersion(_cache, "Equipment");
+
             var cacheKey =
-                $"EquipmentPage_{page}_Size_{pageSize}_Sort_{key}_{dir}_Q_{(search ?? "")}_T_{(equipmentTypeId?.ToString() ?? "")}_C_{(categoryId?.ToString() ?? "")}";
+                $"EquipmentV_{equipmentVersion}_EquipmentPage_{page}_Size_{pageSize}_Sort_{key}_{dir}_Q_{(search ?? "")}_T_{(equipmentTypeId?.ToString() ?? "")}_C_{(categoryId?.ToString() ?? "")}";
 
             if (
                 _cache.TryGetValue(cacheKey, out PagedResult<EquipmentDto>? cached)
