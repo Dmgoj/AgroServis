@@ -1,5 +1,6 @@
 ﻿using AgroServis.Services;
 using AgroServis.Services.DTO;
+using AgroServis.Services.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroServis.Controllers
@@ -113,14 +114,28 @@ namespace AgroServis.Controllers
                 model.EquipmentTypeId = dto.EquipmentTypeId;
                 return View(model);
             }
-            var createdId = await _service.CreateAsync(dto);
 
-            var created = await _service.GetByIdAsync(createdId);
-            TempData["CreatedEquipmentName"] = $"{created.Manufacturer} {created.Model}";
+            try
+            {
+                var createdId = await _service.CreateAsync(dto);
 
-            var freshModel = await _service.GetForCreateAsync();
-            ModelState.Clear();
-            return View(freshModel);
+                var created = await _service.GetByIdAsync(createdId);
+                TempData["CreatedEquipmentName"] = $"{created.Manufacturer} {created.Model}";
+
+                var freshModel = await _service.GetForCreateAsync();
+                ModelState.Clear();
+                return View(freshModel);
+            }
+            catch (DuplicateEntityException ex)
+            {
+                ModelState.AddModelError(nameof(dto.SerialNumber), ex.Message);
+                var model = await _service.GetForCreateAsync();
+                model.Manufacturer = dto.Manufacturer;
+                model.Model = dto.Model;
+                model.SerialNumber = dto.SerialNumber;
+                model.EquipmentTypeId = dto.EquipmentTypeId;
+                return View(model);
+            }
         }
 
         [HttpPost]
