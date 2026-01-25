@@ -329,7 +329,7 @@ namespace AgroServis.Services
             );
 
             var existingEquipment = await _context.Equipment.AnyAsync(e =>
-                e.SerialNumber == dto.SerialNumber
+                e.SerialNumber == dto.SerialNumber && e.Manufacturer == dto.Manufacturer
             );
 
             if (existingEquipment)
