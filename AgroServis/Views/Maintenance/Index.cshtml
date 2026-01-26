@@ -112,14 +112,32 @@
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="type" asp-route-sortDir="@(nextDir("type"))"
-                   asp-route-search="@currentSearch" asp-route-equipmentId="@currentEquipmentId" asp-route-type="@currentType" asp-route-status="@currentStatus" asp-route-dateFrom="@currentDateFrom" asp-route-dateTo="@currentDateTo">
+                <a asp-action="Index" 
+                asp-route-pageNumber="@(pageNumber)" 
+                asp-route-pageSize="@(pageSize)" 
+                asp-route-sortBy="type" 
+                asp-route-sortDir="@(nextDir("type"))"
+                asp-route-search="@currentSearch"
+                asp-route-equipmentId="@currentEquipmentId" 
+                asp-route-type="@currentType" 
+                asp-route-status="@currentStatus" 
+                asp-route-dateFrom="@currentDateFrom" 
+                asp-route-dateTo="@currentDateTo">
                     Type@(sortIndicator("type"))
                 </a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-pageNumber="@(pageNumber)" asp-route-pageSize="@(pageSize)" asp-route-sortBy="status" asp-route-sortDir="@(nextDir("status"))"
-                   asp-route-search="@currentSearch" asp-route-equipmentId="@currentEquipmentId" asp-route-type="@currentType" asp-route-status="@currentStatus" asp-route-dateFrom="@currentDateFrom" asp-route-dateTo="@currentDateTo">
+                <a asp-action="Index"
+                asp-route-pageNumber="@(pageNumber)"
+                asp-route-pageSize="@(pageSize)" 
+                asp-route-sortBy="status" 
+                asp-route-sortDir="@(nextDir("status"))"
+                asp-route-search="@currentSearch" 
+                asp-route-equipmentId="@currentEquipmentId"
+                asp-route-type="@currentType"
+                asp-route-status="@currentStatus"
+                asp-route-dateFrom="@currentDateFrom"
+                asp-route-dateTo="@currentDateTo">
                     Status@(sortIndicator("status"))
                 </a>
             </th>
