@@ -7,7 +7,7 @@ using AgroServis.DAL.Entities;
 
 namespace AgroServis.DAL.Seeding
 {
-    public class EquipmentSeeder : ISeeder
+    public class EquipmentSeeder
     {
         public async Task SeedAsync(ApplicationDbContext context)
         {
