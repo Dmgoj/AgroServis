@@ -11,23 +11,13 @@ namespace AgroServis.DAL.Seeding
     public class RoleSeeder
     {
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-        public RoleSeeder(
-            RoleManager<IdentityRole> roleManager,
-            UserManager<ApplicationUser> userManager)
+        public RoleSeeder(RoleManager<IdentityRole> roleManager)
         {
             _roleManager = roleManager;
-            _userManager = userManager;
         }
 
         public async Task SeedAsync()
-        {
-            // Create roles
-            await CreateRolesAsync();
-        }
-
-        private async Task CreateRolesAsync()
         {
             string[] roleNames = { "Admin", "Worker" };
 
