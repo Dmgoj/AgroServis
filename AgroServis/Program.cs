@@ -4,6 +4,7 @@ using AgroServis.DAL.Seeding;
 using AgroServis.Middleware;
 using AgroServis.Services;
 using AgroServis.Services.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         )
 );
 
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder
@@ -34,11 +34,19 @@ builder
     {
         options.SignIn.RequireConfirmedEmail = false;
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders()
     .AddDefaultUI();
 
 builder.Services.AddRazorPages();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 //builder.Services.AddTransient<IEmailSender, EmailSender>();
 
@@ -53,6 +61,23 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+        var roleSeeder = new RoleSeeder(roleManager);
+        await roleSeeder.SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding roles.");
+    }
+}
 
 app.UseExceptionHandler();
 
