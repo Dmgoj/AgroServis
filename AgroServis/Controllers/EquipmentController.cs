@@ -1,6 +1,7 @@
 ﻿using AgroServis.Services;
 using AgroServis.Services.DTO;
 using AgroServis.Services.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroServis.Controllers
@@ -65,6 +66,7 @@ namespace AgroServis.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id)
         {
             var equipment = await _service.GetByIdForEditAsync(id);
@@ -77,6 +79,7 @@ namespace AgroServis.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(EquipmentUpdateDto dto)
         {
             if (!ModelState.IsValid)
@@ -95,6 +98,7 @@ namespace AgroServis.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
             var model = await _service.GetForCreateAsync();
@@ -103,6 +107,7 @@ namespace AgroServis.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(EquipmentCreateDto dto)
         {
             if (!ModelState.IsValid)
@@ -140,6 +145,7 @@ namespace AgroServis.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             if (!ModelState.IsValid)

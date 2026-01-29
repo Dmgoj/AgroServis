@@ -3,11 +3,13 @@ using AgroServis.Services.DTO;
 using AgroServis.Services.DTOs;
 using AgroServis.Services.Exceptions;
 using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroServis.Controllers
 {
+    [Authorize]
     public class MaintenanceController : Controller
     {
         private readonly IMaintenanceService _service;
@@ -18,6 +20,7 @@ namespace AgroServis.Controllers
         }
 
         // GET: MaintenanceController
+        [AllowAnonymous]
         public async Task<IActionResult> Index(
             int pageNumber = 1,
             int pageSize = 10,
