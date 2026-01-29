@@ -41,13 +41,6 @@ builder
 
 builder.Services.AddRazorPages();
 
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-});
-
 //builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
