@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+namespace AgroServis.Services.DTO;
+
 public record CreateWorkerDto
 {
     [Required]
