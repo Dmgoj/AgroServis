@@ -148,11 +148,20 @@ namespace AgroServis.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                await _service.DeleteAsync(id);
+                TempData["Success"] = "Worker deleted successfully!";
             }
-            await _service.DeleteAsync(id);
+            catch (EntityNotFoundException)
+            {
+                TempData["Error"] = "Worker not found.";
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "An error occurred while deleting the worker.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }
