@@ -215,6 +215,112 @@ namespace AgroServis.Services
 
             return worker.Id;
         }
+
+        public async Task<Worker?> GetByIdAsync(int id)
+        {
+            var version = CacheVersionHelper.GetVersion(_cache, "Worker");
+            var cacheKey = $"Worker_v{version}_{id}";
+
+            if (_cache.TryGetValue(cacheKey, out Worker? cached) && cached != null)
+            {
+                _logger.LogDebug("Cache HIT: Worker {Id}", id);
+                return cached;
+            }
+
+            _logger.LogDebug("Cache MISS: Loading worker {Id} from DB", id);
+
+            var worker = await _context.Workers.FindAsync(id);
+
+            if (worker == null)
+            {
+                _logger.LogWarning("Worker {Id} not found", id);
+                return null;
+            }
+
+            var options = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromMinutes(5))
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(30))
+                .SetPriority(CacheItemPriority.High);
+
+            _cache.Set(cacheKey, worker, options);
+
+            _logger.LogInformation(
+                "Worker {Id} ({FirstName} {LastName}) loaded and cached",
+                id,
+                worker.FirstName,
+                worker.LastName
+            );
+
+            return worker;
+        }
+
+        public async Task<Worker?> GetByUserIdAsync(string userId)
+        {
+            var version = CacheVersionHelper.GetVersion(_cache, "Worker");
+            var cacheKey = $"Worker_v{version}_UserId_{userId}";
+
+            if (_cache.TryGetValue(cacheKey, out Worker? cached) && cached != null)
+            {
+                _logger.LogDebug("Cache HIT: Worker with UserId {UserId}", userId);
+                return cached;
+            }
+
+            _logger.LogDebug("Cache MISS: Loading worker with UserId {UserId} from DB", userId);
+
+            var worker = await _context.Workers.FirstOrDefaultAsync(w => w.UserId == userId);
+
+            if (worker == null)
+            {
+                _logger.LogWarning("Worker with UserId {UserId} not found", userId);
+                return null;
+            }
+
+            var options = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromMinutes(5))
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(30))
+                .SetPriority(CacheItemPriority.High);
+
+            _cache.Set(cacheKey, worker, options);
+
+            return worker;
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            _logger.LogDebug("Deleting worker {Id}", id);
+
+            var worker = await _context.Workers.FindAsync(id);
+
+            if (worker == null)
+            {
+                _logger.LogWarning("Attempted to delete non-existing worker with ID {Id}", id);
+                throw new EntityNotFoundException("Worker", id);
+            }
+
+            var user = await _userManager.FindByIdAsync(worker.UserId);
+            if (user != null)
+            {
+                var result = await _userManager.DeleteAsync(user);
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    _logger.LogError("Failed to delete user account for worker {Id}: {Errors}", id, errors);
+                    throw new InvalidOperationException($"Failed to delete user account: {errors}");
+                }
+                _logger.LogDebug("Deleted user account for worker {Id}", id);
+            }
+
+            _context.Workers.Remove(worker);
+            await _context.SaveChangesAsync();
+
+            CacheVersionHelper.BumpVersion(_cache, "Worker", _logger);
+
+            _logger.LogInformation(
+                "Worker {Id} ({FirstName} {LastName}) deleted",
+                id,
+                worker.FirstName,
+                worker.LastName
+            );
+        }
     }
-}
 }
