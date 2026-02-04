@@ -45,6 +45,7 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
+builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IPaginationService, PaginationService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
