@@ -1,0 +1,246 @@
+@model AgroServis.Services.DTO.PagedResult<AgroServis.Services.DTO.WorkerDto>
+
+@{
+    ViewData["Title"] = "Workers Management";
+    var sortBy = ViewData["SortBy"]?.ToString() ?? "";
+    var sortDir = ViewData["SortDir"]?.ToString() ?? "";
+    var search = ViewData["Search"]?.ToString() ?? "";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-people-fill"></i> Workers Management</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add New Worker
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["CreatedWorkerName"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> Worker <strong>@TempData["CreatedWorkerName"]</strong> has been created successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" value="@search" 
+                           placeholder="Search by name, email, or position...">
+                </div>
+                <div class="col-md-2">
+                    <label for="pageSize" class="form-label">Items per page</label>
+                    <select class="form-select" id="pageSize" name="pageSize">
+                        <option value="5" selected="@(Model.PageSize == 5)">5</option>
+                        <option value="10" selected="@(Model.PageSize == 10)">10</option>
+                        <option value="25" selected="@(Model.PageSize == 25)">25</option>
+                        <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+                <input type="hidden" name="sortBy" value="@sortBy" />
+                <input type="hidden" name="sortDir" value="@sortDir" />
+            </form>
+        </div>
+    </div>
+
+    <!-- Workers Table -->
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <a asp-action="Index" 
+                                       asp-route-pageNumber="@Model.PageNumber" 
+                                       asp-route-pageSize="@Model.PageSize"
+                                       asp-route-sortBy="firstname" 
+                                       asp-route-sortDir="@(sortBy == "firstname" && sortDir == "asc" ? "desc" : "asc")"
+                                       asp-route-search="@search"
+                                       class="text-decoration-none text-dark">
+                                        First Name
+                                        @if (sortBy == "firstname")
+                                        {
+                                            <i class="bi bi-@(sortDir == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>
+                                    <a asp-action="Index" 
+                                       asp-route-pageNumber="@Model.PageNumber"
+                                       asp-route-pageSize="@Model.PageSize"
+                                       asp-route-sortBy="lastname" 
+                                       asp-route-sortDir="@(sortBy == "lastname" && sortDir == "asc" ? "desc" : "asc")"
+                                       asp-route-search="@search"
+                                       class="text-decoration-none text-dark">
+                                        Last Name
+                                        @if (sortBy == "lastname")
+                                        {
+                                            <i class="bi bi-@(sortDir == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>
+                                    <a asp-action="Index" 
+                                       asp-route-pageNumber="@Model.PageNumber"
+                                       asp-route-pageSize="@Model.PageSize"
+                                       asp-route-sortBy="email" 
+                                       asp-route-sortDir="@(sortBy == "email" && sortDir == "asc" ? "desc" : "asc")"
+                                       asp-route-search="@search"
+                                       class="text-decoration-none text-dark">
+                                        Email
+                                        @if (sortBy == "email")
+                                        {
+                                            <i class="bi bi-@(sortDir == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>Phone</th>
+                                <th>
+                                    <a asp-action="Index" 
+                                       asp-route-pageNumber="@Model.PageNumber"
+                                       asp-route-pageSize="@Model.PageSize"
+                                       asp-route-sortBy="position" 
+                                       asp-route-sortDir="@(sortBy == "position" && sortDir == "asc" ? "desc" : "asc")"
+                                       asp-route-search="@search"
+                                       class="text-decoration-none text-dark">
+                                        Position
+                                        @if (sortBy == "position")
+                                        {
+                                            <i class="bi bi-@(sortDir == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var worker in Model.Items)
+                            {
+                                <tr>
+                                    <td>@worker.FirstName</td>
+                                    <td>@worker.LastName</td>
+                                    <td>@worker.Email</td>
+                                    <td>@(worker.PhoneNumber ?? "-")</td>
+                                    <td>@(worker.Position ?? "-")</td>
+                                    <td class="text-center">
+                                        <form asp-action="Delete" asp-route-id="@worker.Id" method="post" class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to delete @worker.FullName?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <!-- Previous Button -->
+                            <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-pageNumber="@(Model.PageNumber - 1)"
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-sortBy="@sortBy"
+                                   asp-route-sortDir="@sortDir"
+                                   asp-route-search="@search">
+                                    Previous
+                                </a>
+                            </li>
+
+                            @* Show page numbers *@
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link" 
+                                       asp-action="Index" 
+                                       asp-route-pageNumber="@i"
+                                       asp-route-pageSize="@Model.PageSize"
+                                       asp-route-sortBy="@sortBy"
+                                       asp-route-sortDir="@sortDir"
+                                       asp-route-search="@search">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <!-- Next Button -->
+                            <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" 
+                                   asp-action="Index" 
+                                   asp-route-pageNumber="@(Model.PageNumber + 1)"
+                                   asp-route-pageSize="@Model.PageSize"
+                                   asp-route-sortBy="@sortBy"
+                                   asp-route-sortDir="@sortDir"
+                                   asp-route-search="@search">
+                                    Next
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <div class="text-center text-muted">
+                        <small>
+                            Showing @((Model.PageNumber - 1) * Model.PageSize + 1)
+                            to @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems))
+                            of @Model.TotalItems workers
+                        </small>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No workers found. 
+                    @if (!string.IsNullOrEmpty(search))
+                    {
+                        <a asp-action="Index" class="alert-link">Clear search</a>
+                        <text> to see all workers.</text>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
