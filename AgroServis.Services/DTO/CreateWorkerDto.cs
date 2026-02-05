@@ -18,7 +18,9 @@ public record CreateWorkerDto
 
     [Required]
     [DataType(DataType.Password)]
-    [StringLength(100, MinimumLength = 6)]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least {2} characters")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$",
+    ErrorMessage = "Password must contain: uppercase, lowercase, digit, and special character (@$!%*?&)")]
     public string Password { get; set; }
 
     [DataType(DataType.Password)]
