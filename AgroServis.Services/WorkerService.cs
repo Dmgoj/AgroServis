@@ -176,6 +176,8 @@ namespace AgroServis.Services
             {
                 UserName = dto.Email,
                 Email = dto.Email,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
                 EmailConfirmed = true
             };
 
