@@ -14,6 +14,7 @@ namespace AgroServis.DAL
         public DbSet<EquipmentCategory> EquipmentCategories { get; set; }
         public DbSet<Maintenance> MaintenanceRecords { get; set; }
         public DbSet<Worker> Workers { get; set; }
+        public DbSet<PendingRegistration> PendingRegistrations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
