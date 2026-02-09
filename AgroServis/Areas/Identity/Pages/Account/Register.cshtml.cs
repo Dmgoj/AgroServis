@@ -2,6 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
+using AgroServis.DAL;
+using AgroServis.DAL.Entities;
+using AgroServis.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,15 +22,6 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using AgroServis.DAL.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
 
 namespace AgroServis.Areas.Identity.Pages.Account
 {
@@ -30,13 +33,17 @@ namespace AgroServis.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ApplicationDbContext context,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +51,8 @@ namespace AgroServis.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _context = context;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -108,60 +117,69 @@ namespace AgroServis.Areas.Identity.Pages.Account
             [StringLength(50)]
             [Display(Name = "Last Name")]
             public string LastName { get; set; }
-        }
 
+            [Phone]
+            [Display(Name = "Phone Number")]
+            public string? PhoneNumber { get; set; }
 
-        public async Task OnGetAsync(string returnUrl = null)
-        {
-            ReturnUrl = returnUrl;
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            [Display(Name = "Position")]
+            [StringLength(100)]
+            public string? Position { get; set; }
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (ModelState.IsValid)
             {
-                var user = CreateUser();
-
-                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                var result = await _userManager.CreateAsync(user, Input.Password);
-
-                if (result.Succeeded)
+                var existingUser = await _userManager.FindByEmailAsync(Input.Email);
+                if (existingUser != null)
                 {
-                    _logger.LogInformation("User created a new account with password.");
-
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                    var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                        protocol: Request.Scheme);
-
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                    {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                    }
-                    else
-                    {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl);
-                    }
+                    ModelState.AddModelError(string.Empty, "Email is already registered.");
+                    return Page();
                 }
-                foreach (var error in result.Errors)
+
+                var existingPending = await _context.PendingRegistrations
+                    .AnyAsync(p => p.Email == Input.Email && !p.IsProcessed);
+                if (existingPending)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.AddModelError(string.Empty, "Registration request already pending approval.");
+                    return Page();
                 }
+
+                var tempUser = new ApplicationUser();
+                var hashedPassword = _userManager.PasswordHasher.HashPassword(tempUser, Input.Password);
+
+                var pendingRegistration = new PendingRegistration
+                {
+                    FirstName = Input.FirstName,
+                    LastName = Input.LastName,
+                    Email = Input.Email,
+                    PhoneNumber = Input.PhoneNumber,
+                    Position = Input.Position,
+                    PasswordHash = hashedPassword,
+                    RequestedAt = DateTime.UtcNow,
+                    IsProcessed = false
+                };
+
+                _context.PendingRegistrations.Add(pendingRegistration);
+                await _context.SaveChangesAsync();
+
+                try
+                {
+                    await _emailService.SendAdminApprovalNotificationAsync(pendingRegistration);
+                    _logger.LogInformation("Admin notification sent for registration: {Email}", Input.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send admin notification for {Email}", Input.Email);
+                }
+
+                return RedirectToPage("RegisterSuccess");
             }
 
-            // If we got this far, something failed, redisplay form
             return Page();
         }
 
