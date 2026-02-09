@@ -1,0 +1,30 @@
+﻿@page
+@model RegisterSuccessModel
+@{
+    ViewData["Title"] = "Registration Submitted";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="card-title mb-3">Registration Submitted!</h2>
+                    <p class="card-text lead mb-4">
+                        Thank you for registering. Your registration request has been submitted for approval.
+                    </p>
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i> You will receive an email notification once your account has been approved.
+                    </div>
+                    <p class="text-muted mt-4">This usually takes 1-2 business days.</p>
+                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary mt-3">
+                        Return to Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
