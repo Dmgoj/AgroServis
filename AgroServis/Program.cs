@@ -47,6 +47,7 @@ builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IPaginationService, PaginationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
