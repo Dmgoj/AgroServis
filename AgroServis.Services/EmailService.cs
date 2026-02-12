@@ -30,15 +30,18 @@ namespace AgroServis.Services
 
             var subject = $"New Registration Request - {registration.FirstName} {registration.LastName}";
             var body = $@"
+        <html>
+        <body>
             <h2>New Worker Registration Request</h2>
             <p><strong>Name:</strong> {registration.FirstName} {registration.LastName}</p>
             <p><strong>Email:</strong> {registration.Email}</p>
             <p><strong>Phone:</strong> {registration.PhoneNumber ?? "N/A"}</p>
             <p><strong>Position:</strong> {registration.Position ?? "N/A"}</p>
             <p><strong>Requested:</strong> {registration.RequestedAt:yyyy-MM-dd HH:mm}</p>
-            <br/>
-            <p><a href='{approvalLink}'>Review and Approve/Reject</a></p>
-        ";
+            <p><a href='{approvalLink}'>Click here to Review and Approve/Reject</a></p>
+        </body>
+        </html>
+    ";
 
             await SendEmailAsync(adminEmail, subject, body);
         }
