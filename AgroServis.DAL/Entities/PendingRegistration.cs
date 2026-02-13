@@ -17,5 +17,7 @@ namespace AgroServis.DAL.Entities
         public string PasswordHash { get; set; }
         public DateTime RequestedAt { get; set; }
         public bool IsProcessed { get; set; } = false;
+        public string ApprovalToken { get; set; }
+        public DateTime TokenExpiresAt { get; set; }
     }
 }
