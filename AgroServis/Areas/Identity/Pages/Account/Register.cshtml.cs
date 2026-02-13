@@ -152,6 +152,8 @@ namespace AgroServis.Areas.Identity.Pages.Account
                 var tempUser = new ApplicationUser();
                 var hashedPassword = _userManager.PasswordHasher.HashPassword(tempUser, Input.Password);
 
+                var approvalToken = Guid.NewGuid().ToString("N");
+
                 var pendingRegistration = new PendingRegistration
                 {
                     FirstName = Input.FirstName,
@@ -161,7 +163,9 @@ namespace AgroServis.Areas.Identity.Pages.Account
                     Position = Input.Position,
                     PasswordHash = hashedPassword,
                     RequestedAt = DateTime.UtcNow,
-                    IsProcessed = false
+                    IsProcessed = false,
+                    ApprovalToken = approvalToken,
+                    TokenExpiresAt = DateTime.UtcNow.AddDays(7)
                 };
 
                 _context.PendingRegistrations.Add(pendingRegistration);
