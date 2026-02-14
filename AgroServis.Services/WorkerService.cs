@@ -17,19 +17,22 @@ namespace AgroServis.Services
         private readonly IMemoryCache _cache;
         private readonly IPaginationService _paginationService;
         private readonly ILogger<WorkerService> _logger;
+        private readonly IEmailService _emailService;
 
         public WorkerService(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             IPaginationService paginationService,
             IMemoryCache cache,
-            ILogger<WorkerService> logger)
+            ILogger<WorkerService> logger,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _paginationService = paginationService;
             _cache = cache;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<PagedResult<WorkerDto>> GetAllAsync(
@@ -323,6 +326,216 @@ namespace AgroServis.Services
                 worker.FirstName,
                 worker.LastName
             );
+        }
+
+        public async Task<(bool Success, string Message, string? FirstName)> ApproveRegistrationByTokenAsync(string token)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(token))
+                {
+                    return (false, "Invalid approval link.", null);
+                }
+
+                var registration = await _context.PendingRegistrations
+                    .FirstOrDefaultAsync(p => p.ApprovalToken == token && !p.IsProcessed);
+
+                if (registration == null)
+                {
+                    return (false, "Registration request not found or already processed.", null);
+                }
+
+                if (registration.TokenExpiresAt < DateTime.UtcNow)
+                {
+                    return (false, "This approval link has expired.", null);
+                }
+
+                // Create user
+                var user = new ApplicationUser
+                {
+                    UserName = registration.Email,
+                    Email = registration.Email,
+                    EmailConfirmed = true,
+                    FirstName = registration.FirstName,
+                    LastName = registration.LastName,
+                    IsApproved = true,
+                };
+
+                user.PasswordHash = registration.PasswordHash;
+
+                var result = await _userManager.CreateAsync(user);
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    _logger.LogError("Failed to create user: {Errors}", errors);
+                    return (false, $"Failed to create user: {errors}", null);
+                }
+
+                await _userManager.AddToRoleAsync(user, "Worker");
+
+                // Create worker
+                var worker = new Worker
+                {
+                    FirstName = registration.FirstName,
+                    LastName = registration.LastName,
+                    Email = registration.Email,
+                    PhoneNumber = registration.PhoneNumber,
+                    Position = registration.Position,
+                    UserId = user.Id
+                };
+
+                _context.Workers.Add(worker);
+                _context.PendingRegistrations.Remove(registration);
+                await _context.SaveChangesAsync();
+
+                CacheVersionHelper.BumpVersion(_cache, "Worker", _logger);
+
+                // Send confirmation email
+                await _emailService.SendApprovalConfirmationAsync(registration.Email, registration.FirstName);
+
+                _logger.LogInformation("Registration approved via token for {Email}", registration.Email);
+
+                return (true, "Registration approved successfully.", registration.FirstName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving registration by token");
+                return (false, "An error occurred while processing the approval.", null);
+            }
+        }
+
+        public async Task<(bool Success, string Message, string? FirstName)> RejectRegistrationByTokenAsync(string token)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(token))
+                {
+                    return (false, "Invalid rejection link.", null);
+                }
+
+                var registration = await _context.PendingRegistrations
+                    .FirstOrDefaultAsync(p => p.ApprovalToken == token && !p.IsProcessed);
+
+                if (registration == null)
+                {
+                    return (false, "Registration request not found or already processed.", null);
+                }
+
+                if (registration.TokenExpiresAt < DateTime.UtcNow)
+                {
+                    return (false, "This rejection link has expired.", null);
+                }
+
+                var firstName = registration.FirstName;
+
+                // Send rejection email
+                await _emailService.SendRejectionNotificationAsync(registration.Email, registration.FirstName);
+
+                _context.PendingRegistrations.Remove(registration);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Registration rejected via token for {Email}", registration.Email);
+
+                return (true, "Registration rejected successfully.", firstName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting registration by token");
+                return (false, "An error occurred while processing the rejection.", null);
+            }
+        }
+
+        public async Task<(bool Success, string Message, string? FirstName)> ApproveRegistrationByIdAsync(int id)
+        {
+            try
+            {
+                var registration = await _context.PendingRegistrations.FindAsync(id);
+                if (registration == null || registration.IsProcessed)
+                {
+                    return (false, "Registration request not found or already processed.", null);
+                }
+
+                // Create user
+                var user = new ApplicationUser
+                {
+                    UserName = registration.Email,
+                    Email = registration.Email,
+                    EmailConfirmed = true,
+                    FirstName = registration.FirstName,
+                    LastName = registration.LastName,
+                    IsApproved = true,
+                };
+
+                user.PasswordHash = registration.PasswordHash;
+
+                var result = await _userManager.CreateAsync(user);
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    _logger.LogError("Failed to create user: {Errors}", errors);
+                    return (false, $"Failed to create user: {errors}", null);
+                }
+
+                await _userManager.AddToRoleAsync(user, "Worker");
+
+                // Create worker
+                var worker = new Worker
+                {
+                    FirstName = registration.FirstName,
+                    LastName = registration.LastName,
+                    Email = registration.Email,
+                    PhoneNumber = registration.PhoneNumber,
+                    Position = registration.Position,
+                    UserId = user.Id
+                };
+
+                _context.Workers.Add(worker);
+                _context.PendingRegistrations.Remove(registration);
+                await _context.SaveChangesAsync();
+
+                CacheVersionHelper.BumpVersion(_cache, "Worker", _logger);
+
+                // Send confirmation email
+                await _emailService.SendApprovalConfirmationAsync(registration.Email, registration.FirstName);
+
+                _logger.LogInformation("Registration approved via admin dashboard for {Email}", registration.Email);
+
+                return (true, $"Worker {registration.FirstName} {registration.LastName} approved successfully.", registration.FirstName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving registration by ID {Id}", id);
+                return (false, "An error occurred while approving the registration.", null);
+            }
+        }
+
+        public async Task<(bool Success, string Message, string? FirstName)> RejectRegistrationByIdAsync(int id)
+        {
+            try
+            {
+                var registration = await _context.PendingRegistrations.FindAsync(id);
+                if (registration == null || registration.IsProcessed)
+                {
+                    return (false, "Registration request not found or already processed.", null);
+                }
+
+                var firstName = registration.FirstName;
+
+                // Send rejection email
+                await _emailService.SendRejectionNotificationAsync(registration.Email, registration.FirstName);
+
+                _context.PendingRegistrations.Remove(registration);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Registration rejected via admin dashboard for {Email}", registration.Email);
+
+                return (true, $"Registration from {registration.FirstName} {registration.LastName} has been rejected.", firstName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting registration by ID {Id}", id);
+                return (false, "An error occurred while rejecting the registration.", null);
+            }
         }
     }
 }
