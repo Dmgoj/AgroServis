@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AgroServis.Controllers
 {
-    // NO [Authorize] attribute - public access!
     public class RegistrationController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -43,7 +42,6 @@ namespace AgroServis.Controllers
                 return View("ApprovalError", "Registration request not found or already processed.");
             }
 
-            // Check if token expired
             if (registration.TokenExpiresAt < DateTime.UtcNow)
             {
                 return View("ApprovalError", "This approval link has expired.");
@@ -51,7 +49,6 @@ namespace AgroServis.Controllers
 
             try
             {
-                // Create user
                 var user = new ApplicationUser
                 {
                     UserName = registration.Email,
@@ -74,7 +71,6 @@ namespace AgroServis.Controllers
 
                 await _userManager.AddToRoleAsync(user, "Worker");
 
-                // Create worker
                 var worker = new Worker
                 {
                     FirstName = registration.FirstName,
@@ -89,7 +85,6 @@ namespace AgroServis.Controllers
                 _context.PendingRegistrations.Remove(registration);
                 await _context.SaveChangesAsync();
 
-                // Send confirmation
                 await _emailService.SendApprovalConfirmationAsync(registration.Email, registration.FirstName);
 
                 _logger.LogInformation("Registration approved for {Email}", registration.Email);
@@ -119,7 +114,6 @@ namespace AgroServis.Controllers
                 return View("ApprovalError", "Registration request not found or already processed.");
             }
 
-            // Check if token expired
             if (registration.TokenExpiresAt < DateTime.UtcNow)
             {
                 return View("ApprovalError", "This rejection link has expired.");
