@@ -28,9 +28,10 @@ public record CreateWorkerDto
     [Compare("Password", ErrorMessage = "Passwords don't match")]
     public string ConfirmPassword { get; set; }
 
-    [Phone]
+    [Required(ErrorMessage = "Phone number is required")]
+    [Phone(ErrorMessage = "Invalid phone number")]
     [Display(Name = "Phone Number")]
     public string PhoneNumber { get; set; }
 
-    public string Position { get; set; }
+    public string? Position { get; set; }
 }
