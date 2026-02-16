@@ -1,8 +1,6 @@
 ﻿using AgroServis.DAL;
-using AgroServis.DAL.Entities;
 using AgroServis.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,20 +10,14 @@ namespace AgroServis.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IEmailService _emailService;
-        private readonly ILogger<AdminController> _logger;
+        private readonly IWorkerService _workerService;
 
         public AdminController(
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            IEmailService emailService,
-            ILogger<AdminController> logger)
+            IWorkerService workerService)
         {
             _context = context;
-            _userManager = userManager;
-            _emailService = emailService;
-            _logger = logger;
+            _workerService = workerService;
         }
 
         [HttpGet]
@@ -39,96 +31,26 @@ namespace AgroServis.Controllers
             return View(pending);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ApproveRegistration(int id)
-        {
-            var registration = await _context.PendingRegistrations.FindAsync(id);
-            if (registration == null || registration.IsProcessed)
-            {
-                return NotFound();
-            }
-
-            return View(registration);
-        }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApproveRegistrationConfirmed(int id)
+        public async Task<IActionResult> ApproveRegistration(int id)
         {
-            var registration = await _context.PendingRegistrations.FindAsync(id);
-            if (registration == null || registration.IsProcessed)
-            {
-                return NotFound();
-            }
+            var (success, message, _) = await _workerService.ApproveRegistrationByIdAsync(id);
 
-            try
-            {
-                var user = new ApplicationUser
-                {
-                    UserName = registration.Email,
-                    Email = registration.Email,
-                    EmailConfirmed = true,
-                    FirstName = registration.FirstName,
-                    LastName = registration.LastName,
-                    IsApproved = true,
-                };
+            TempData[success ? "Success" : "Error"] = message;
 
-                user.PasswordHash = registration.PasswordHash;
-
-                var result = await _userManager.CreateAsync(user);
-                if (!result.Succeeded)
-                {
-                    TempData["Error"] = $"Failed to create user: {string.Join(", ", result.Errors.Select(e => e.Description))}";
-                    return RedirectToAction(nameof(PendingRegistrations));
-                }
-
-                await _userManager.AddToRoleAsync(user, "Worker");
-
-                var worker = new Worker
-                {
-                    FirstName = registration.FirstName,
-                    LastName = registration.LastName,
-                    Email = registration.Email,
-                    PhoneNumber = registration.PhoneNumber,
-                    Position = registration.Position,
-                    UserId = user.Id
-                };
-
-                _context.Workers.Add(worker);
-
-                registration.IsProcessed = true;
-                await _context.SaveChangesAsync();
-
-                await _emailService.SendApprovalConfirmationAsync(registration.Email, registration.FirstName);
-
-                TempData["Success"] = $"Worker {registration.FirstName} {registration.LastName} approved successfully!";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error approving registration {Id}", id);
-                TempData["Error"] = "An error occurred while approving the registration.";
-            }
-
-            return RedirectToAction(nameof(PendingRegistrations));
+            return RedirectToAction("Index", "Workers", new { tab = "pending" });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectRegistration(int id)
         {
-            var registration = await _context.PendingRegistrations.FindAsync(id);
-            if (registration == null || registration.IsProcessed)
-            {
-                return NotFound();
-            }
+            var (success, message, _) = await _workerService.RejectRegistrationByIdAsync(id);
 
-            registration.IsProcessed = true;
-            await _context.SaveChangesAsync();
+            TempData[success ? "Success" : "Error"] = message;
 
-            await _emailService.SendRejectionNotificationAsync(registration.Email, registration.FirstName);
-
-            TempData["Success"] = "Registration request rejected.";
-            return RedirectToAction(nameof(PendingRegistrations));
+            return RedirectToAction("Index", "Workers", new { tab = "pending" });
         }
     }
 }
