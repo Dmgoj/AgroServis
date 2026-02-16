@@ -33,6 +33,11 @@ namespace AgroServis.Controllers
                 search
             );
 
+            var pendingRegistrations = await _service.GetPendingRegistrationsAsync();
+
+            ViewBag.PendingRegistrations = pendingRegistrations;
+            ViewBag.PendingCount = pendingRegistrations.Count;
+
             ViewData["SortBy"] = sortBy ?? "";
             ViewData["SortDir"] = sortDir ?? "";
             ViewData["Search"] = search ?? "";
