@@ -350,7 +350,6 @@ namespace AgroServis.Services
                     return (false, "This approval link has expired.", null);
                 }
 
-                // Create user
                 var user = new ApplicationUser
                 {
                     UserName = registration.Email,
@@ -363,6 +362,7 @@ namespace AgroServis.Services
 
                 user.PasswordHash = registration.PasswordHash;
 
+                _logger.LogInformation("Creating user account for {Email}", registration.Email);
                 var result = await _userManager.CreateAsync(user);
                 if (!result.Succeeded)
                 {
@@ -371,9 +371,10 @@ namespace AgroServis.Services
                     return (false, $"Failed to create user: {errors}", null);
                 }
 
+                _logger.LogInformation("User created successfully, adding to Worker role");
                 await _userManager.AddToRoleAsync(user, "Worker");
 
-                // Create worker
+                _logger.LogInformation("Creating Worker record for {Email}", registration.Email);
                 var worker = new Worker
                 {
                     FirstName = registration.FirstName,
@@ -385,12 +386,16 @@ namespace AgroServis.Services
                 };
 
                 _context.Workers.Add(worker);
+                _logger.LogInformation("Worker added to context, now removing from PendingRegistrations");
+
                 _context.PendingRegistrations.Remove(registration);
+                _logger.LogInformation("About to save changes...");
+
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("SaveChanges completed successfully");
 
                 CacheVersionHelper.BumpVersion(_cache, "Worker", _logger);
 
-                // Send confirmation email
                 await _emailService.SendApprovalConfirmationAsync(registration.Email, registration.FirstName);
 
                 _logger.LogInformation("Registration approved via token for {Email}", registration.Email);
@@ -521,7 +526,6 @@ namespace AgroServis.Services
 
                 var firstName = registration.FirstName;
 
-                // Send rejection email
                 await _emailService.SendRejectionNotificationAsync(registration.Email, registration.FirstName);
 
                 _context.PendingRegistrations.Remove(registration);
@@ -535,6 +539,26 @@ namespace AgroServis.Services
             {
                 _logger.LogError(ex, "Error rejecting registration by ID {Id}", id);
                 return (false, "An error occurred while rejecting the registration.", null);
+            }
+        }
+
+        public async Task<List<PendingRegistration>> GetPendingRegistrationsAsync()
+        {
+            try
+            {
+                var pendingRegistrations = await _context.PendingRegistrations
+                    .Where(p => !p.IsProcessed)
+                    .OrderByDescending(p => p.RequestedAt)
+                    .ToListAsync();
+
+                _logger.LogInformation("Retrieved {Count} pending registrations", pendingRegistrations.Count);
+
+                return pendingRegistrations;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving pending registrations");
+                return new List<PendingRegistration>();
             }
         }
     }
