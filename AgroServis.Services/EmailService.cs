@@ -26,22 +26,48 @@ namespace AgroServis.Services
         public async Task SendAdminApprovalNotificationAsync(PendingRegistration registration)
         {
             var adminEmail = _configuration["AdminEmail"];
-            var approvalLink = $"https://localhost:7120/Admin/ApproveRegistration/{registration.Id}";
+            var approveLink = $"https://localhost:7120/Registration/Approve?token={registration.ApprovalToken}";
+            var rejectLink = $"https://localhost:7120/Registration/Reject?token={registration.ApprovalToken}";
 
             var subject = $"New Registration Request - {registration.FirstName} {registration.LastName}";
             var body = $@"
-        <html>
-        <body>
-            <h2>New Worker Registration Request</h2>
-            <p><strong>Name:</strong> {registration.FirstName} {registration.LastName}</p>
-            <p><strong>Email:</strong> {registration.Email}</p>
-            <p><strong>Phone:</strong> {registration.PhoneNumber ?? "N/A"}</p>
-            <p><strong>Position:</strong> {registration.Position ?? "N/A"}</p>
-            <p><strong>Requested:</strong> {registration.RequestedAt:yyyy-MM-dd HH:mm}</p>
-            <p><a href='{approvalLink}'>Click here to Review and Approve/Reject</a></p>
-        </body>
-        </html>
-    ";
+            <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset='utf-8'>
+                </head>
+                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                        <h2 style='color: #007bff;'>New Worker Registration Request</h2>
+
+                        <div style='background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                            <p><strong>Name:</strong> {registration.FirstName} {registration.LastName}</p>
+                            <p><strong>Email:</strong> {registration.Email}</p>
+                            <p><strong>Phone:</strong> {registration.PhoneNumber ?? "N/A"}</p>
+                            <p><strong>Position:</strong> {registration.Position ?? "N/A"}</p>
+                            <p><strong>Requested:</strong> {registration.RequestedAt:yyyy-MM-dd HH:mm}</p>
+                        </div>
+
+                        <h3 style='margin-top: 30px;'>Quick Actions:</h3>
+
+                        <table width='100%' cellpadding='10' cellspacing='0'>
+                            <tr>
+                                <td width='50%' style='text-align: center;'>
+                                    <a href='{approveLink}' style='display: inline-block; padding: 12px 30px; background-color: #28a745; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;'>
+                                        ✓ Approve
+                                    </a>
+                                </td>
+                                <td width='50%' style='text-align: center;'>
+                                    <a href='{rejectLink}' style='display: inline-block; padding: 12px 30px; background-color: #dc3545; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;'>
+                                        ✗ Reject
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </body>
+                </html>
+            ";
 
             await SendEmailAsync(adminEmail, subject, body);
         }
