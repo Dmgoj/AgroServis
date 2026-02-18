@@ -18,6 +18,11 @@ namespace AgroServis.Services
             _logger = logger;
         }
 
+        public async Task SendEmailAsync(string email, string subject, string htmlMessage)
+        {
+            await SendAdminEmailAsync(email, subject, htmlMessage);
+        }
+
         public async Task SendAdminApprovalNotificationAsync(PendingRegistration registration)
         {
             var adminEmail = _configuration["AdminEmail"];
@@ -64,7 +69,7 @@ namespace AgroServis.Services
                 </html>
             ";
 
-            await SendEmailAsync(adminEmail, subject, body);
+            await SendAdminEmailAsync(adminEmail, subject, body);
         }
 
         public async Task SendApprovalConfirmationAsync(string email, string firstName)
@@ -76,7 +81,7 @@ namespace AgroServis.Services
             <p>You can now log in at: https://yourdomain.com/login</p>
         ";
 
-            await SendEmailAsync(email, subject, body);
+            await SendAdminEmailAsync(email, subject, body);
         }
 
         public async Task SendRejectionNotificationAsync(string email, string firstName)
@@ -88,10 +93,10 @@ namespace AgroServis.Services
             <p>Please contact the administrator for more information.</p>
         ";
 
-            await SendEmailAsync(email, subject, body);
+            await SendAdminEmailAsync(email, subject, body);
         }
 
-        private async Task SendEmailAsync(string to, string subject, string body)
+        private async Task SendAdminEmailAsync(string to, string subject, string body)
         {
             try
             {
