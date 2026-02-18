@@ -1,18 +1,13 @@
 ﻿using AgroServis.DAL.Entities;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SendGrid;
 using SendGrid.Helpers.Mail;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AgroServis.Services
 {
-    public class EmailService : IEmailService
+    public class EmailService : IEmailService, IEmailSender
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;
