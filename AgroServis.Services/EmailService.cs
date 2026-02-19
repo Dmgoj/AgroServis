@@ -81,11 +81,12 @@ namespace AgroServis.Services
 
         public async Task SendApprovalConfirmationAsync(string email, string firstName)
         {
+            var baseUrl = _configuration["App:PublicBaseUrl"]!.TrimEnd('/');
             var subject = "Your Registration Has Been Approved";
             var body = $@"
             <h2>Welcome, {firstName}!</h2>
             <p>Your worker registration has been approved.</p>
-            <p>You can now log in at: https://yourdomain.com/login</p>
+            <p>You can now log in at: {baseUrl}/Identity/Account/Login</p>
         ";
 
             await SendAdminEmailAsync(email, subject, body);
