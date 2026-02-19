@@ -29,6 +29,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IEmailService>(sp => sp.GetRequiredService<EmailService>());
+builder.Services.AddScoped<IEmailSender>(sp => sp.GetRequiredService<EmailService>());
+
 builder
     .Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
@@ -41,13 +45,10 @@ builder
 
 builder.Services.AddRazorPages();
 
-//builder.Services.AddTransient<IEmailSender, EmailSender>();
-
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IPaginationService, PaginationService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
