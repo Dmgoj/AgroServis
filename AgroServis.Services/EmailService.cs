@@ -16,18 +16,25 @@ namespace AgroServis.Services
         {
             _configuration = configuration;
             _logger = logger;
+            _logger.LogInformation("EmailService instance created");
         }
 
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            await SendAdminEmailAsync(email, subject, htmlMessage);
+            _logger.LogInformation("Inside SendEmailAsync");
+            var client = new SendGridClient(_configuration["SendGrid:ApiKey"]);
+            var from = new EmailAddress(_configuration["SendGrid:FromEmail"], _configuration["SendGrid:FromName"]);
+            var to = new EmailAddress(email);
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, StripHtml(htmlMessage), htmlMessage);
+            await client.SendEmailAsync(msg);
         }
 
         public async Task SendAdminApprovalNotificationAsync(PendingRegistration registration)
         {
             var adminEmail = _configuration["AdminEmail"];
-            var approveLink = $"https://localhost:7120/Registration/Approve?token={registration.ApprovalToken}";
-            var rejectLink = $"https://localhost:7120/Registration/Reject?token={registration.ApprovalToken}";
+            var baseUrl = _configuration["App:PublicBaseUrl"]!.TrimEnd('/');
+            var approveLink = $"{baseUrl}/Registration/Approve?token={registration.ApprovalToken}";
+            var rejectLink = $"{baseUrl}/Registration/Reject?token={registration.ApprovalToken}";
 
             var subject = $"New Registration Request - {registration.FirstName} {registration.LastName}";
             var body = $@"
