@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,9 @@ namespace AgroServis.DAL.Entities
         public decimal? Cost { get; set; }
 
         public string? PerformedBy { get; set; }
+
+        [ForeignKey(nameof(PerformedBy))]
+        public ApplicationUser? PerformedByUser { get; set; }
 
         public string? Notes { get; set; }
 
