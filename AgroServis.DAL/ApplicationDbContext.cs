@@ -21,6 +21,11 @@ namespace AgroServis.DAL
             base.OnModelCreating(builder);
 
             builder.Entity<Maintenance>().HasQueryFilter(m => m.DeletedAt == null);
+            builder.Entity<Maintenance>()
+            .HasOne(m => m.PerformedByUser)
+            .WithMany()
+            .HasForeignKey(m => m.PerformedBy)
+            .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
