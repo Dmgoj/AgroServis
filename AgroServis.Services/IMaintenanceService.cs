@@ -26,7 +26,7 @@ namespace AgroServis.Services
         Task<MaintenanceDto> GetByIdAsync(int id);
         Task<MaintenanceEditDto> GetByIdForEditAsync(int id);
         Task<MaintenanceCreateDto> GetForCreateAsync();
-        Task<int> CreateAsync(MaintenanceCreateDto dto);
+        Task<int> CreateAsync(MaintenanceCreateDto dto, string? performedByUserId);
         Task UpdateAsync(MaintenanceUpdateDto dto);
         Task DeleteAsync(int id);
     }
