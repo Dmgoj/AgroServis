@@ -6,6 +6,7 @@ using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AgroServis.Controllers
 {
@@ -101,7 +102,9 @@ namespace AgroServis.Controllers
 
             try
             {
-                var id = await _service.CreateAsync(dto);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                var id = await _service.CreateAsync(dto, userId);
 
                 TempData["Success"] = "Maintenance record created successfully!";
                 return RedirectToAction(nameof(Index));
