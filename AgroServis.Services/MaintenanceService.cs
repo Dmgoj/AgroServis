@@ -35,7 +35,7 @@ namespace AgroServis.Services
             _logger = logger;
         }
 
-        public async Task<int> CreateAsync(MaintenanceCreateDto dto)
+        public async Task<int> CreateAsync(MaintenanceCreateDto dto, string? performedByUserId)
         {
             _logger.LogInformation(
                 "Creating maintenance for equipment {EquipmentId}",
@@ -54,6 +54,7 @@ namespace AgroServis.Services
                 EquipmentId = dto.EquipmentId,
                 MaintenanceDate = dto.MaintenanceDate,
                 Description = dto.Description,
+                PerformedBy = performedByUserId,
                 Type = dto.Type,
                 Status = dto.Status,
                 Cost = dto.Cost,
@@ -202,12 +203,9 @@ namespace AgroServis.Services
                 EquipmentName = $"{m.Equipment.Manufacturer} {m.Equipment.Model}",
                 EquipmentSerialNumber = m.Equipment.SerialNumber,
                 MaintenanceDate = m.MaintenanceDate,
-                Description = m.Description,
                 Type = m.Type,
                 Status = m.Status,
                 Cost = m.Cost,
-                Notes = m.Notes,
-                PerformedBy = m.PerformedBy,
                 CreatedAt = m.CreatedAt,
                 UpdatedAt = m.UpdatedAt,
             });
@@ -251,8 +249,7 @@ namespace AgroServis.Services
 
                     Cost = m.Cost,
                     Notes = m.Notes,
-                    PerformedBy = m.PerformedBy,
-
+                    PerformedBy = m.PerformedByUser != null ? m.PerformedByUser.UserName : null,
                     CreatedAt = m.CreatedAt,
                     UpdatedAt = m.UpdatedAt,
                 })
