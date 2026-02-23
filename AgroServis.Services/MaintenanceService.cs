@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AgroServis.DAL;
+﻿using AgroServis.DAL;
 using AgroServis.DAL.Entities;
+using AgroServis.DAL.Enums;
 using AgroServis.Services.DTO;
 using AgroServis.Services.DTOs;
 using AgroServis.Services.Exceptions;
@@ -12,6 +8,11 @@ using AgroServis.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace AgroServis.Services
 {
@@ -60,6 +61,7 @@ namespace AgroServis.Services
                 Cost = dto.Cost,
                 Notes = dto.Notes,
                 CreatedAt = DateTime.Now,
+                CompletedAt = dto.Status == MaintenanceStatus.Completed ? DateTime.UtcNow : null
             };
 
             _context.MaintenanceRecords.Add(maintenance);
@@ -332,6 +334,9 @@ namespace AgroServis.Services
                 throw new EntityNotFoundException("Maintenance", dto.Id);
             }
 
+            var oldStatus = maintenance.Status;
+            var newStatus = dto.Status;
+
             maintenance.EquipmentId = dto.EquipmentId;
             maintenance.MaintenanceDate = dto.MaintenanceDate;
             maintenance.Description = dto.Description;
@@ -341,6 +346,18 @@ namespace AgroServis.Services
             maintenance.Notes = dto.Notes;
             maintenance.PerformedBy = dto.PerformedBy;
             maintenance.UpdatedAt = DateTime.UtcNow;
+
+            var wasCompleted = oldStatus == MaintenanceStatus.Completed;
+            var isCompleted = newStatus == MaintenanceStatus.Completed;
+
+            if (!wasCompleted && isCompleted)
+            {
+                maintenance.CompletedAt = DateTime.UtcNow;
+            }
+            else if (wasCompleted && !isCompleted)
+            {
+                maintenance.CompletedAt = null;
+            }
 
             await _context.SaveChangesAsync();
 
