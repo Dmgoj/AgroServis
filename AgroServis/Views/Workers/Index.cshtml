@@ -152,7 +152,7 @@
                                 <tbody>
                                     @foreach (var worker in Model.Items)
                                     {
-                                        <tr>
+                                        <tr class="clickable-row" data-url="@Url.Action("Details", "Workers", new { id = worker.Id })">
                                             <td>@worker.FirstName</td>
                                             <td>@worker.LastName</td>
                                             <td>@worker.Email</td>
@@ -323,5 +323,15 @@
             const pendingTab = new bootstrap.Tab(document.getElementById('pending-tab'));
             pendingTab.show();
         }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".clickable-row").forEach(function (row) {
+                row.addEventListener("click", function () {
+                    window.location = this.dataset.url;
+                });
+            });
+        });
     </script>
 }
