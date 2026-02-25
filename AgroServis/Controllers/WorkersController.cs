@@ -97,5 +97,14 @@ namespace AgroServis.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+        public async Task<IActionResult> Details(int id)
+        {
+            var worker = await _service.GetDtoByIdAsync(id);
+            if (worker == null)
+            {
+                return NotFound();
+            }
+            return View(worker);
+        }
     }
 }
