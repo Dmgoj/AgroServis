@@ -259,6 +259,44 @@ namespace AgroServis.Services
             return worker;
         }
 
+        public async Task<WorkerDto?> GetDtoByIdAsync(int id)
+        {
+            var version = CacheVersionHelper.GetVersion(_cache, "Worker");
+            var cacheKey = $"WorkerDto_v{version}_{id}";
+
+            if (_cache.TryGetValue(cacheKey, out WorkerDto? cached) && cached != null)
+                return cached;
+
+            var dto = await _context.Workers
+                .AsNoTracking()
+                .Where(w => w.Id == id)
+                .Select(w => new WorkerDto
+                {
+                    Id = w.Id,
+                    FirstName = w.FirstName,
+                    LastName = w.LastName,
+                    Email = w.Email,
+                    PhoneNumber = w.PhoneNumber,
+                    Position = w.Position,
+                    UserId = w.UserId
+                })
+                .FirstOrDefaultAsync();
+
+            if (dto == null) return null;
+
+            _cache.Set(
+                cacheKey,
+                dto,
+                new MemoryCacheEntryOptions
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(5),
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
+                    Priority = CacheItemPriority.High
+                }
+            );
+
+            return dto;
+        }
         public async Task<Worker?> GetByUserIdAsync(string userId)
         {
             var version = CacheVersionHelper.GetVersion(_cache, "Worker");
