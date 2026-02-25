@@ -1,0 +1,37 @@
+﻿@model AgroServis.Services.DTO.WorkerDto
+
+@{
+    ViewData["Title"] = "Worker Details";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Worker Details</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title mb-1">@Model.FullName</h4>
+            <div class="text-muted mb-4">Worker ID: @Model.Id</div>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@Model.Email</dd>
+
+                <dt class="col-sm-3">Phone number</dt>
+                <dd class="col-sm-9">
+                    @(!string.IsNullOrWhiteSpace(Model.PhoneNumber) ? Model.PhoneNumber : "—")
+                </dd>
+
+                <dt class="col-sm-3">Position</dt>
+                <dd class="col-sm-9">
+                    @(!string.IsNullOrWhiteSpace(Model.Position) ? Model.Position : "—")
+                </dd>
+
+                <dt class="col-sm-3">User ID</dt>
+                <dd class="col-sm-9"><code>@Model.UserId</code></dd>
+            </dl>
+        </div>
+    </div>
+</div>
