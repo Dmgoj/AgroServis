@@ -159,7 +159,7 @@ namespace AgroServis.Services
             return pagedResult;
         }
 
-        public async Task<int> CreateAsync(CreateWorkerDto dto)
+        public async Task<int> CreateAsync(WorkerCreateDto dto)
         {
             _logger.LogInformation(
                 "Creating worker: {FirstName} {LastName} ({Email})",
@@ -364,6 +364,54 @@ namespace AgroServis.Services
                 worker.FirstName,
                 worker.LastName
             );
+        }
+
+        public async Task UpdateAsync(WorkerUpdateDto dto)
+        {
+            _logger.LogInformation("Updating worker {Id}", dto.Id);
+
+            var worker = await _context.Workers
+                .FirstOrDefaultAsync(w => w.Id == dto.Id);
+
+            if (worker == null)
+                throw new EntityNotFoundException("Worker", dto.Id);
+
+            if (!string.Equals(worker.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+
+                if (existingUser != null && existingUser.Id != worker.UserId)
+                    throw new DuplicateEntityException(dto.Email);
+            }
+
+            worker.FirstName = dto.FirstName;
+            worker.LastName = dto.LastName;
+            worker.Email = dto.Email;
+            worker.PhoneNumber = dto.PhoneNumber;
+            worker.Position = dto.Position;
+
+            var user = await _userManager.FindByIdAsync(worker.UserId);
+            if (user != null)
+            {
+                user.FirstName = dto.FirstName;
+                user.LastName = dto.LastName;
+                user.Email = dto.Email;
+                user.UserName = dto.Email;
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException($"Failed to update user: {errors}");
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            CacheVersionHelper.BumpVersion(_cache, "Worker", _logger);
+
+            _logger.LogInformation("Worker {Id} updated successfully", dto.Id);
         }
 
         public async Task<(bool Success, string Message, string? FirstName)> ApproveRegistrationByTokenAsync(string token)
