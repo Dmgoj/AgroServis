@@ -3,6 +3,7 @@ using AgroServis.Services.DTO;
 using AgroServis.Services.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 
 namespace AgroServis.Controllers
 {
@@ -53,7 +54,7 @@ namespace AgroServis.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateWorkerDto dto)
+        public async Task<IActionResult> Create(WorkerCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -68,7 +69,7 @@ namespace AgroServis.Controllers
                 TempData["CreatedWorkerName"] = $"{created.FirstName} {created.LastName}";
 
                 ModelState.Clear();
-                return View(new CreateWorkerDto());
+                return View(new WorkerCreateDto());
             }
             catch (DuplicateEntityException ex)
             {
@@ -105,6 +106,50 @@ namespace AgroServis.Controllers
                 return NotFound();
             }
             return View(worker);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var worker = await _service.GetByIdAsync(id);
+            if (worker == null)
+            {
+                return NotFound();
+            }
+            var dto = new WorkerUpdateDto
+            {
+                Id = worker.Id,
+                FirstName = worker.FirstName,
+                LastName = worker.LastName,
+                Email = worker.Email,
+                PhoneNumber = worker.PhoneNumber,
+                Position = worker.Position
+            };
+            return View(dto);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(WorkerUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+                return View(dto);
+
+            try
+            {
+                await _service.UpdateAsync(dto);
+                TempData["Success"] = "Worker updated successfully!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DuplicateEntityException ex)
+            {
+                ModelState.AddModelError(nameof(dto.Email), ex.Message);
+                return View(dto);
+            }
+            catch (EntityNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }
