@@ -7,6 +7,7 @@
     var search = ViewData["Search"]?.ToString() ?? "";
 }
 
+
 <div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col-md-8">
@@ -159,6 +160,11 @@
                                             <td>@worker.PhoneNumber</td>
                                             <td>@(worker.Position ?? "-")</td>
                                             <td class="text-center">
+                                                <a asp-action="Edit"
+                                                   asp-route-id="@worker.Id"
+                                                   class="btn btn-sm btn-warning me-1">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </a>
                                                 <form asp-action="Delete" asp-route-id="@worker.Id" method="post" class="d-inline"
                                                       onsubmit="return confirm('Are you sure you want to delete @worker.FullName?');">
                                                     @Html.AntiForgeryToken()
