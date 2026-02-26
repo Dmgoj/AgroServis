@@ -2,7 +2,7 @@
 
 namespace AgroServis.Services.DTO;
 
-public record CreateWorkerDto
+public record WorkerCreateDto
 {
     [Required]
     [Display(Name = "First Name")]
