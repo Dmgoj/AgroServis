@@ -13,8 +13,9 @@ namespace AgroServis.Services
             string? search = null
         );
         Task<Worker?> GetByIdAsync(int id);
-        Task<int> CreateAsync(CreateWorkerDto dto);
+        Task<int> CreateAsync(WorkerCreateDto dto);
         Task DeleteAsync(int id);
+        Task UpdateAsync(WorkerUpdateDto dto);
         Task<Worker?> GetByUserIdAsync(string userId);
         Task<WorkerDto?> GetDtoByIdAsync(int id);
         Task<(bool Success, string Message, string? FirstName)> ApproveRegistrationByTokenAsync(string token);
