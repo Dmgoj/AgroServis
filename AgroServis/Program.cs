@@ -8,8 +8,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 // Add services to the container.
 var connectionString =
@@ -49,6 +52,7 @@ builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IPaginationService, PaginationService>();
+builder.Services.AddSingleton<IPdfReportService, PdfReportService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
