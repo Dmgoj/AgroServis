@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using AgroServis.DAL.Enums;
 using AgroServis.Services.DTO;
 
-namespace AgroServis.Services.DTOs
+namespace AgroServis.Services.DTO
 {
     public record MaintenanceEditDto
     {

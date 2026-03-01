@@ -1,7 +1,7 @@
 ﻿using AgroServis.DAL.Enums;
 using System;
 
-namespace AgroServis.Services.DTOs
+namespace AgroServis.Services.DTO
 {
     public record MaintenanceDto
     {
