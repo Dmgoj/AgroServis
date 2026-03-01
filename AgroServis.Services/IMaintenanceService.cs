@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AgroServis.Services.DTO;
-using AgroServis.Services.DTOs;
 
 namespace AgroServis.Services
 {
@@ -26,6 +25,7 @@ namespace AgroServis.Services
         Task<MaintenanceDto> GetByIdAsync(int id);
         Task<MaintenanceEditDto> GetByIdForEditAsync(int id);
         Task<MaintenanceCreateDto> GetForCreateAsync();
+        Task<IReadOnlyList<MaintenanceDto>> GetForReportAsync(MaintenanceReportOptionsDto options);
         Task<int> CreateAsync(MaintenanceCreateDto dto, string? performedByUserId);
         Task UpdateAsync(MaintenanceUpdateDto dto);
         Task DeleteAsync(int id);
