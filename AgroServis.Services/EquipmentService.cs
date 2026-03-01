@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using AgroServis.DAL;
 using AgroServis.DAL.Entities;
 using AgroServis.Services.DTO;
-using AgroServis.Services.DTOs;
+
+using AgroServis.Services.DTO;
+
 using AgroServis.Services.Exceptions;
 using AgroServis.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
