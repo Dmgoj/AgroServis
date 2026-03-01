@@ -1,5 +1,5 @@
 ﻿using AgroServis.Services;
-using AgroServis.Services.DTOs;
+using AgroServis.Services.DTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AgroServis.Controllers
@@ -7,24 +7,57 @@ namespace AgroServis.Controllers
     public class ReportController : Controller
     {
         private readonly IPdfReportService _pdfReportService;
+        private readonly IMaintenanceService _maintenanceService;
 
-        public ReportController(IPdfReportService pdfReportService)
+        public ReportController(IPdfReportService pdfReportService, IMaintenanceService maintenanceService)
         {
             _pdfReportService = pdfReportService;
+            _maintenanceService = maintenanceService;
         }
 
-        // GET /Reports/MaintenanceReport
-        public IActionResult MaintenanceReport()
+        [HttpGet]
+        public async Task<IActionResult> MaintenanceReport()
         {
-            // Replace with your repository/DbContext call to load maintenances
-            var sample = new[]
+            var vm = new MaintenanceReportOptionsDto();
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MaintenanceReport(MaintenanceReportOptionsDto options)
+        {
+            var data = await _maintenanceService.GetForReportAsync(options);
+            var pdfBytes = _pdfReportService.GenerateMaintenanceReport(data, options);
+
+            return File(pdfBytes, "application/pdf", "maintenance-report.pdf");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MaintenanceSingleReport(int id)
+        {
+            var item = await _maintenanceService.GetByIdAsync(id); // or your existing method
+
+            if (item == null)
+                return NotFound();
+
+            var data = new List<MaintenanceDto> { item };
+
+            var options = new MaintenanceReportOptionsDto
             {
-                new MaintenanceDto { Id = 1, Title = "Oil Change", Description = "Engine oil and filter", Date = DateTime.UtcNow.AddDays(-10), PerformedBy = "Tech A", Cost = 120m },
-                new MaintenanceDto { Id = 2, Title = "Belt Replacement", Description = "Drive belt replaced", Date = DateTime.UtcNow.AddDays(-5), PerformedBy = "Tech B", Cost = 75.5m }
+                IncludeEquipmentName = true,
+                IncludeSerialNumber = true,
+                IncludeMaintenanceDate = true,
+                IncludeType = true,
+                IncludeStatus = true,
+                IncludeCost = true,
+                IncludePerformedBy = true,
+                IncludeDescription = true,
+                IncludeNotes = true
             };
 
-            var pdfBytes = _pdfReportService.GenerateMaintenanceReport(sample);
-            return File(pdfBytes, "application/pdf", "maintenance-report.pdf");
+            var pdfBytes = _pdfReportService.GenerateMaintenanceReport(data, options);
+
+            return File(pdfBytes, "application/pdf", $"maintenance-{id}.pdf");
         }
     }
 }
