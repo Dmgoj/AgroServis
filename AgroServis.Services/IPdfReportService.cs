@@ -1,4 +1,7 @@
-﻿using AgroServis.Services.DTOs;
+﻿using AgroServis.Services.DTO;
+
+using AgroServis.Services.DTO;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +12,9 @@ namespace AgroServis.Services
 {
     public interface IPdfReportService
     {
-        byte[] GenerateMaintenanceReport(IEnumerable<MaintenanceDto> items);
+        byte[] GenerateMaintenanceReport(
+        IReadOnlyList<MaintenanceDto> data,
+        MaintenanceReportOptionsDto options
+    );
     }
 }
