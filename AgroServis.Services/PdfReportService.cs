@@ -1,117 +1,125 @@
-﻿using AgroServis.Services.DTOs;
+﻿using AgroServis.Services.DTO;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
+
 using System.Text;
 using System.Threading.Tasks;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace AgroServis.Services
 {
     public class PdfReportService : IPdfReportService
     {
-        public byte[] GenerateMaintenanceReport(IEnumerable<MaintenanceDto> items)
-            => GenerateMaintenanceReport(items, new[] { "Date", "Equipment", "Serial", "Description", "Cost", "PerformedBy" });
-
-        public byte[] GenerateMaintenanceReport(IEnumerable<MaintenanceDto> items, IEnumerable<string> selectedFields)
+        public byte[] GenerateMaintenanceReport(IReadOnlyList<MaintenanceDto> data, MaintenanceReportOptionsDto options)
         {
-            var list = (items ?? Enumerable.Empty<MaintenanceDto>()).ToList();
-            var fields = new HashSet<string>(selectedFields ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            var now = DateTime.Now;
 
-            bool showDate = fields.Contains("Date");
-            bool showEquipment = fields.Contains("Equipment");
-            bool showSerial = fields.Contains("Serial");
-            bool showDescription = fields.Contains("Description");
-            bool showType = fields.Contains("Type");
-            bool showStatus = fields.Contains("Status");
-            bool showCost = fields.Contains("Cost");
-            bool showPerformedBy = fields.Contains("PerformedBy");
-            bool showNotes = fields.Contains("Notes");
-            bool showCompletedAt = fields.Contains("CompletedAt");
-
-            var document = Document.Create(container =>
+            QuestPDF.Infrastructure.IDocument document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
-                    page.Margin(20);
-                    page.PageColor(Colors.White);
+                    page.Margin(25);
                     page.DefaultTextStyle(x => x.FontSize(10));
 
-                    page.Header()
-                        .Row(row =>
-                        {
-                            row.RelativeColumn().Column(col =>
-                            {
-                                col.Item().Text("Maintenance Report").FontSize(16).SemiBold();
-                                col.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm}").FontSize(9).FontColor(Colors.Grey.Darken2);
-                            });
-
-                            row.ConstantColumn(120).AlignRight().Text($"Items: {list.Count}").FontSize(10);
-                        });
-
-                    page.Content().PaddingVertical(8).Column(col =>
+                    page.Header().Element(header =>
                     {
-                        if (!list.Any())
+                        header.Row(row =>
                         {
-                            col.Item().AlignCenter().Text("No maintenance records found").FontColor(Colors.Grey.Darken2);
-                            return;
-                        }
-
-                        // Header row: build columns dynamically
-                        col.Item().BorderBottom(1).PaddingBottom(6).Row(header =>
-                        {
-                            if (showDate) header.ConstantColumn(60).Text("Date").SemiBold();
-                            if (showEquipment) header.RelativeColumn().Text("Equipment").SemiBold();
-                            if (showSerial) header.ConstantColumn(80).AlignRight().Text("Serial").SemiBold();
-                            if (showDescription) header.RelativeColumn().Text("Description").SemiBold();
-                            if (showType) header.ConstantColumn(60).AlignRight().Text("Type").SemiBold();
-                            if (showStatus) header.ConstantColumn(60).AlignRight().Text("Status").SemiBold();
-                            if (showCost) header.ConstantColumn(70).AlignRight().Text("Cost").SemiBold();
-                            if (showPerformedBy) header.ConstantColumn(100).AlignRight().Text("Performed By").SemiBold();
-                            if (showNotes) header.ConstantColumn(120).AlignRight().Text("Notes").SemiBold();
-                            if (showCompletedAt) header.ConstantColumn(80).AlignRight().Text("Completed").SemiBold();
+                            row.RelativeItem().Column(col =>
+                            {
+                                col.Item().Text("Maintenance Report").FontSize(18).SemiBold();
+                                col.Item().Text($"Generated: {now:yyyy-MM-dd HH:mm}").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                col.Item().Text($"Records: {data.Count}").FontSize(9).FontColor(Colors.Grey.Darken2);
+                            });
                         });
-
-                        foreach (var m in list)
-                        {
-                            col.Item().PaddingVertical(6).Row(r =>
-                            {
-                                if (showDate) r.ConstantColumn(60).Text(m.MaintenanceDate.ToString("dd-MM-yyyy"));
-                                if (showEquipment) r.RelativeColumn().Text($"{m.EquipmentName}");
-                                if (showSerial) r.ConstantColumn(80).AlignRight().Text(m.EquipmentSerialNumber);
-                                if (showDescription) r.RelativeColumn().Text(m.Description).FontSize(9).FontColor(Colors.Grey.Darken2);
-                                if (showType) r.ConstantColumn(60).AlignRight().Text(m.Type.ToString());
-                                if (showStatus) r.ConstantColumn(60).AlignRight().Text(m.Status.ToString());
-                                if (showCost) r.ConstantColumn(70).AlignRight().Text(m.Cost.HasValue ? $"{m.Cost.Value:C2}" : "N/A");
-                                if (showPerformedBy) r.ConstantColumn(100).AlignRight().Text(m.PerformedBy ?? string.Empty);
-                                if (showNotes) r.ConstantColumn(120).AlignRight().Text(m.Notes ?? string.Empty).FontSize(9);
-                                if (showCompletedAt) r.ConstantColumn(80).AlignRight().Text(m.CompletedAt?.ToString("dd-MM-yyyy") ?? "-");
-                            });
-
-                            col.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
-                        }
-
-                        // Totals row if cost selected
-                        if (showCost)
-                        {
-                            var total = list.Where(x => x.Cost.HasValue).Sum(x => x.Cost.Value);
-                            col.Item().PaddingTop(8).Row(t =>
-                            {
-                                t.RelativeColumn().Text(string.Empty);
-                                t.ConstantColumn(150).Row(r =>
-                                {
-                                    r.ConstantColumn(80).Text("Total:").SemiBold();
-                                    r.ConstantColumn(70).AlignRight().Text($"{total:C2}").SemiBold();
-                                });
-                            });
-                        }
                     });
 
-                    page.Footer().AlignCenter().Text(x => x.Span("Page ").CurrentPageNumber().Span(" / ").TotalPages());
+                    page.Content().PaddingTop(10).Element(content =>
+                    {
+                        content.Table(table =>
+                        {
+                            // Build dynamic columns based on options
+                            table.ColumnsDefinition(columns =>
+                            {
+                                if (options.IncludeEquipmentName) columns.RelativeColumn(2);
+                                if (options.IncludeSerialNumber) columns.RelativeColumn(2);
+                                if (options.IncludeMaintenanceDate) columns.RelativeColumn(1);
+                                if (options.IncludeType) columns.RelativeColumn(1);
+                                if (options.IncludeStatus) columns.RelativeColumn(1);
+                                if (options.IncludeCost) columns.RelativeColumn(1);
+                                if (options.IncludePerformedBy) columns.RelativeColumn(2);
+                                if (options.IncludeDescription) columns.RelativeColumn(3);
+                                if (options.IncludeNotes) columns.RelativeColumn(3);
+                            });
+
+                            // Header row
+                            table.Header(header =>
+                            {
+                                static IContainer HeaderCell(IContainer c) =>
+                                    c.DefaultTextStyle(x => x.SemiBold())
+                                     .PaddingVertical(6)
+                                     .PaddingHorizontal(4)
+                                     .Background(Colors.Grey.Lighten3)
+                                     .BorderBottom(1)
+                                     .BorderColor(Colors.Grey.Medium);
+
+                                if (options.IncludeEquipmentName) header.Cell().Element(HeaderCell).Text("Equipment");
+                                if (options.IncludeSerialNumber) header.Cell().Element(HeaderCell).Text("Serial #");
+                                if (options.IncludeMaintenanceDate) header.Cell().Element(HeaderCell).Text("Date");
+                                if (options.IncludeType) header.Cell().Element(HeaderCell).Text("Type");
+                                if (options.IncludeStatus) header.Cell().Element(HeaderCell).Text("Status");
+                                if (options.IncludeCost) header.Cell().Element(HeaderCell).AlignRight().Text("Cost");
+                                if (options.IncludePerformedBy) header.Cell().Element(HeaderCell).Text("Performed By");
+                                if (options.IncludeDescription) header.Cell().Element(HeaderCell).Text("Description");
+                                if (options.IncludeNotes) header.Cell().Element(HeaderCell).Text("Notes");
+                            });
+
+                            // Body rows
+                            foreach (var m in data)
+                            {
+                                static IContainer Cell(IContainer c) =>
+                                    c.PaddingVertical(4)
+                                     .PaddingHorizontal(4)
+                                     .BorderBottom(1)
+                                     .BorderColor(Colors.Grey.Lighten2);
+
+                                if (options.IncludeEquipmentName) table.Cell().Element(Cell).Text(m.EquipmentName);
+                                if (options.IncludeSerialNumber) table.Cell().Element(Cell).Text(m.EquipmentSerialNumber);
+                                if (options.IncludeMaintenanceDate) table.Cell().Element(Cell).Text(m.FormattedDate);
+                                if (options.IncludeType) table.Cell().Element(Cell).Text(m.Type.ToString());
+                                if (options.IncludeStatus) table.Cell().Element(Cell).Text(m.Status.ToString());
+
+                                if (options.IncludeCost)
+                                    table.Cell().Element(Cell).AlignRight().Text(m.FormattedCost);
+
+                                if (options.IncludePerformedBy)
+                                    table.Cell().Element(Cell).Text(m.PerformedBy ?? "N/A");
+
+                                if (options.IncludeDescription)
+                                    table.Cell().Element(Cell).Text(m.Description);
+
+                                if (options.IncludeNotes)
+                                    table.Cell().Element(Cell).Text(string.IsNullOrWhiteSpace(m.Notes) ? "—" : m.Notes);
+                            }
+                        });
+                    });
+
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span("Page ");
+                        text.CurrentPageNumber();
+                        text.Span(" / ");
+                        text.TotalPages();
+                    });
                 });
             });
 
             return document.GeneratePdf();
         }
     }
+}
