@@ -2,7 +2,7 @@
 using AgroServis.DAL.Entities;
 using AgroServis.DAL.Enums;
 using AgroServis.Services.DTO;
-using AgroServis.Services.DTOs;
+
 using AgroServis.Services.Exceptions;
 using AgroServis.Services.Utilities;
 using Microsoft.EntityFrameworkCore;
@@ -302,6 +302,34 @@ namespace AgroServis.Services
             };
 
             return maintenanceEditDto;
+        }
+
+        public async Task<IReadOnlyList<MaintenanceDto>> GetForReportAsync(MaintenanceReportOptionsDto options)
+        {
+            var query = _context.MaintenanceRecords
+                .AsNoTracking()
+                .Where(m => m.DeletedAt == null);
+
+            // (Optional) add filters here later using options.DateFrom/DateTo/EquipmentId etc.
+
+            return await query
+                .Select(m => new MaintenanceDto
+                {
+                    Id = m.Id,
+                    EquipmentId = m.EquipmentId,
+                    EquipmentName = m.Equipment.Manufacturer + " " + m.Equipment.Model,
+                    EquipmentSerialNumber = m.Equipment.SerialNumber,
+                    MaintenanceDate = m.MaintenanceDate,
+                    Description = m.Description,
+                    Type = m.Type,
+                    Status = m.Status,
+                    Cost = m.Cost,
+                    Notes = m.Notes,
+                    PerformedBy = m.PerformedByUser != null ? m.PerformedByUser.UserName : null,
+                    CreatedAt = m.CreatedAt,
+                    UpdatedAt = m.UpdatedAt
+                })
+                .ToListAsync();
         }
 
         public async Task<MaintenanceCreateDto> GetForCreateAsync()
