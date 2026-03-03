@@ -186,6 +186,22 @@
     </div>
 </div>
 
+<div class="row mt-2">
+    <div class="col-md-12">
+        <a asp-controller="Maintenance"
+           asp-action="ReportBuilder"
+           asp-route-search="@currentSearch"
+           asp-route-equipmentId="@currentEquipmentId"
+           asp-route-type="@currentType"
+           asp-route-status="@currentStatus"
+           asp-route-dateFrom="@currentDateFrom"
+           asp-route-dateTo="@currentDateTo"
+           class="btn btn-outline-primary">
+            <i class="bi bi-printer"></i> Print report
+        </a>
+    </div>
+</div>
+
 <!-- Pagination Controls -->
 @if (Model.TotalPages > 1)
 {
