@@ -20,8 +20,10 @@ namespace AgroServis.Services.DTO
         public bool IncludeNotes { get; set; } = true;
         public bool IncludePerformedBy { get; set; } = true;
 
+        public string? Search { get; set; }
+        public string? Type { get; set; }
+        public string? Status { get; set; }
         public DateTime? DateFrom { get; set; }
-
         public DateTime? DateTo { get; set; }
         public int? EquipmentId { get; set; }
 
