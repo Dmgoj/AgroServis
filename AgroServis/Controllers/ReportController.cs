@@ -35,7 +35,7 @@ namespace AgroServis.Controllers
         [HttpGet]
         public async Task<IActionResult> MaintenanceSingleReport(int id)
         {
-            var item = await _maintenanceService.GetByIdAsync(id); // or your existing method
+            var item = await _maintenanceService.GetByIdAsync(id);
 
             if (item == null)
                 return NotFound();
