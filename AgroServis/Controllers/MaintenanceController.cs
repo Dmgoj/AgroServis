@@ -15,10 +15,12 @@ namespace AgroServis.Controllers
     public class MaintenanceController : Controller
     {
         private readonly IMaintenanceService _service;
+        private readonly IPdfReportService _reportService;
 
-        public MaintenanceController(IMaintenanceService service)
+        public MaintenanceController(IMaintenanceService service, IPdfReportService reportService)
         {
             _service = service;
+            _reportService = reportService;
         }
 
         // GET: MaintenanceController
@@ -183,13 +185,13 @@ namespace AgroServis.Controllers
         // GET: MaintenanceController/ReportBuilder
         [HttpGet]
         public async Task<IActionResult> ReportBuilder(
-    string? search = null,
-    int? equipmentId = null,
-    string? type = null,
-    string? status = null,
-    DateTime? dateFrom = null,
-    DateTime? dateTo = null
-)
+            string? search = null,
+            int? equipmentId = null,
+            string? type = null,
+            string? status = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null
+        )
         {
             var dto = new MaintenanceReportOptionsDto
             {
@@ -213,6 +215,17 @@ namespace AgroServis.Controllers
                 .ToList();
 
             return View(dto);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PrintReport(MaintenanceReportOptionsDto options)
+        {
+            var data = await _service.GetForReportAsync(options);
+
+            var pdf = _reportService.GenerateMaintenanceReport(data, options);
+
+            return File(pdf, "application/pdf", "maintenance-report.pdf");
         }
     }
 }
