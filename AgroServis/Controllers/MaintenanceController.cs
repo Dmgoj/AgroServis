@@ -6,6 +6,7 @@ using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 
 namespace AgroServis.Controllers
@@ -177,6 +178,41 @@ namespace AgroServis.Controllers
             }
             await _service.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: MaintenanceController/ReportBuilder
+        [HttpGet]
+        public async Task<IActionResult> ReportBuilder(
+    string? search = null,
+    int? equipmentId = null,
+    string? type = null,
+    string? status = null,
+    DateTime? dateFrom = null,
+    DateTime? dateTo = null
+)
+        {
+            var dto = new MaintenanceReportOptionsDto
+            {
+                Search = search,
+                EquipmentId = equipmentId,
+                Type = type,
+                Status = status,
+                DateFrom = dateFrom,
+                DateTo = dateTo
+            };
+
+            // equipment dropdown
+            var equipments = await _service.GetForReportAsync(dto);
+            dto.AvailableEquipment = equipments
+                .Select(e => new SelectListItem
+                {
+                    Value = e.Id.ToString(),
+                    Text = $"{e.EquipmentName} (SN: {e.EquipmentSerialNumber})",
+                    Selected = equipmentId.HasValue && e.Id == equipmentId.Value
+                })
+                .ToList();
+
+            return View(dto);
         }
     }
 }
