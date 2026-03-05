@@ -304,15 +304,40 @@ namespace AgroServis.Services
             return maintenanceEditDto;
         }
 
-        public async Task<IReadOnlyList<MaintenanceDto>> GetForReportAsync(MaintenanceReportOptionsDto options)
+        public async Task<IReadOnlyList<MaintenanceDto>> GetForReportAsync(
+     MaintenanceReportOptionsDto options,
+     CancellationToken ct = default)
         {
             var query = _context.MaintenanceRecords
                 .AsNoTracking()
                 .Where(m => m.DeletedAt == null);
 
-            // (Optional) add filters here later using options.DateFrom/DateTo/EquipmentId etc.
+            if (options.DateFrom.HasValue)
+                query = query.Where(m => m.MaintenanceDate >= options.DateFrom.Value);
+
+            if (options.DateTo.HasValue)
+                query = query.Where(m => m.MaintenanceDate <= options.DateTo.Value);
+
+            if (options.EquipmentId.HasValue)
+                query = query.Where(m => m.EquipmentId == options.EquipmentId.Value);
+
+            if (!string.IsNullOrWhiteSpace(options.Search))
+            {
+                var s = options.Search.Trim();
+                query = query.Where(m =>
+                    EF.Functions.Like(m.Description, $"%{s}%") ||
+                    EF.Functions.Like(m.Notes, $"%{s}%") ||
+                    EF.Functions.Like(m.PerformedBy, $"%{s}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(options.Type))
+                query = query.Where(m => m.Type.ToString() == options.Type);
+
+            if (!string.IsNullOrWhiteSpace(options.Status))
+                query = query.Where(m => m.Status.ToString() == options.Status);
 
             return await query
+                .OrderByDescending(m => m.MaintenanceDate)
                 .Select(m => new MaintenanceDto
                 {
                     Id = m.Id,
@@ -325,11 +350,11 @@ namespace AgroServis.Services
                     Status = m.Status,
                     Cost = m.Cost,
                     Notes = m.Notes,
-                    PerformedBy = m.PerformedByUser != null ? m.PerformedByUser.UserName : null,
+                    PerformedBy = m.PerformedByUser != null ? m.PerformedByUser.UserName : m.PerformedBy,
                     CreatedAt = m.CreatedAt,
                     UpdatedAt = m.UpdatedAt
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public async Task<MaintenanceCreateDto> GetForCreateAsync()
