@@ -203,14 +203,22 @@ namespace AgroServis.Controllers
                 DateTo = dateTo
             };
 
-            // equipment dropdown
-            var equipments = await _service.GetForReportAsync(dto);
-            dto.AvailableEquipment = equipments
-                .Select(e => new SelectListItem
+            var maintenanceRecords = await _service.GetForReportAsync(dto);
+
+            dto.AvailableEquipment = maintenanceRecords
+                .Select(m => new
                 {
-                    Value = e.Id.ToString(),
-                    Text = $"{e.EquipmentName} (SN: {e.EquipmentSerialNumber})",
-                    Selected = equipmentId.HasValue && e.Id == equipmentId.Value
+                    m.EquipmentId,
+                    m.EquipmentName,
+                    m.EquipmentSerialNumber
+                })
+                .DistinctBy(x => x.EquipmentId)
+                .OrderBy(x => x.EquipmentName)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.EquipmentId.ToString(),
+                    Text = $"{x.EquipmentName} (SN: {x.EquipmentSerialNumber})",
+                    Selected = equipmentId.HasValue && x.EquipmentId == equipmentId.Value
                 })
                 .ToList();
 
@@ -221,11 +229,29 @@ namespace AgroServis.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PrintReport(MaintenanceReportOptionsDto options)
         {
-            var data = await _service.GetForReportAsync(options);
+            var ct = HttpContext.RequestAborted;
 
-            var pdf = _reportService.GenerateMaintenanceReport(data, options);
+            try
+            {
+                ct.ThrowIfCancellationRequested();
 
-            return File(pdf, "application/pdf", "maintenance-report.pdf");
+                var rows = await _service.GetForReportAsync(options, ct);
+
+                ct.ThrowIfCancellationRequested();
+
+                var pdfBytes = _reportService.GenerateMaintenanceReport(rows, options);
+
+                return File(pdfBytes, "application/pdf",
+                    $"maintenance-report-{DateTime.UtcNow:yyyyMMdd-HHmm}.pdf");
+            }
+            catch (OperationCanceledException)
+            {
+                return new EmptyResult();
+            }
+            catch (IOException)
+            {
+                return new EmptyResult();
+            }
         }
     }
 }
