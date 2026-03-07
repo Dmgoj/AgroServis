@@ -43,7 +43,6 @@ namespace AgroServis.Services
                     {
                         content.Table(table =>
                         {
-                            // Build dynamic columns based on options
                             table.ColumnsDefinition(columns =>
                             {
                                 if (options.IncludeEquipmentName) columns.RelativeColumn(2);
