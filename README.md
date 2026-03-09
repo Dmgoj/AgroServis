@@ -1,3 +1,6 @@
+# AgroServis
+## Farm equipment management
+
 App is intended for farmers to track the maintenance of their agricultural machines.
 
 ## Quick start
