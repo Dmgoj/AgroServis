@@ -52,7 +52,7 @@ builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 builder.Services.AddScoped<IWorkerService, WorkerService>();
 builder.Services.AddScoped<IPaginationService, PaginationService>();
-builder.Services.AddSingleton<IPdfReportService, PdfReportService>();
+builder.Services.AddScoped<IPdfReportService, PdfReportService>();
 builder.Services.AddScoped<IMaintenanceScheduleService, MaintenanceScheduleService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
