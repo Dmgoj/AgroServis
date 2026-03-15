@@ -136,7 +136,7 @@
     <tbody>
         @foreach (var item in Model.Items)
         {
-            <tr class="@(item.IsMaintenanceDue ? "table-danger" : "")">
+            <tr class="@(item.IsMaintenanceDue ? "table-danger" : "") clickable-row "data-href="@Url.Action("Details", "Equipment", new { id = item.Id })">
                 <td>@item.Id</td>
                 <td>@item.Manufacturer</td>
                 <td>@item.Model</td>
@@ -267,6 +267,23 @@
     <div class="text-center text-muted mb-3">
         Page @Model.PageNumber of @Model.TotalPages (Total: @Model.TotalItems items)
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            document.querySelectorAll(".clickable-row").forEach(row => {
+                row.addEventListener("click", function (e) {
+
+                    if (e.target.closest(".stop-row-click")) {
+                        return;
+                    }
+
+                    window.location = this.dataset.href;
+                });
+            });
+
+        });
+    </script>
 }
 
 
