@@ -26,6 +26,9 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Maintenance" asp-action="Index">Maintenances</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="MaintenanceSchedules" asp-action="Index">Maintenance Schedules</a>
+                        </li>
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
