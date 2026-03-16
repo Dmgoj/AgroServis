@@ -115,5 +115,24 @@ namespace AgroServis.Services
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task<MaintenanceScheduleCreateDto> GetForCreateAsync()
+        {
+            var availableEquipment = await _context.Equipment
+                .AsNoTracking()
+                .OrderBy(e => e.Manufacturer)
+                .ThenBy(e => e.Model)
+                .Select(e => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Value = e.Id.ToString(),
+                    Text = $"{e.Manufacturer} {e.Model} (SN: {e.SerialNumber})"
+                })
+                .ToListAsync();
+
+            return new MaintenanceScheduleCreateDto
+            {
+                AvailableEquipment = availableEquipment
+            };
+        }
     }
 }
