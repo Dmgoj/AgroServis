@@ -134,5 +134,39 @@ namespace AgroServis.Services
                 AvailableEquipment = availableEquipment
             };
         }
+
+        public async Task<MaintenanceScheduleUpdateDto?> GetForEditAsync(int id)
+        {
+            var schedule = await _context.MaintenanceSchedules
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (schedule == null)
+                return null;
+
+            var availableEquipment = await _context.Equipment
+                .AsNoTracking()
+                .OrderBy(e => e.Manufacturer)
+                .ThenBy(e => e.Model)
+                .Select(e => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Value = e.Id.ToString(),
+                    Text = $"{e.Manufacturer} {e.Model} (SN: {e.SerialNumber})",
+                    Selected = e.Id == schedule.EquipmentId
+                })
+                .ToListAsync();
+
+            return new MaintenanceScheduleUpdateDto
+            {
+                Id = schedule.Id,
+                EquipmentId = schedule.EquipmentId,
+                Title = schedule.Title,
+                Description = schedule.Description,
+                IntervalDays = schedule.IntervalDays,
+                LastPerformedAt = schedule.LastPerformedAt,
+                IsActive = schedule.IsActive,
+                AvailableEquipment = availableEquipment
+            };
+        }
     }
 }
