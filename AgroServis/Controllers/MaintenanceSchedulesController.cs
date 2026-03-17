@@ -54,5 +54,41 @@ namespace AgroServis.Controllers
                 return View(dto);
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var dto = await _service.GetForEditAsync(id);
+            if (dto == null)
+                return NotFound();
+
+            return View(dto);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(MaintenanceScheduleUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var reloadDto = await _service.GetForEditAsync(dto.Id);
+                if (reloadDto == null)
+                    return NotFound();
+
+                dto = dto with { AvailableEquipment = reloadDto.AvailableEquipment };
+                return View(dto);
+            }
+
+            try
+            {
+                await _service.UpdateAsync(dto);
+                TempData["Success"] = "Maintenance schedule updated successfully!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (EntityNotFoundException)
+            {
+                return NotFound();
+            }
+        }
     }
 }
