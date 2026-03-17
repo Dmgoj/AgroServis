@@ -1,4 +1,6 @@
-﻿namespace AgroServis.Services.DTO
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace AgroServis.Services.DTO
 {
     public record MaintenanceScheduleUpdateDto
     {
@@ -9,5 +11,6 @@
         public int IntervalDays { get; init; }
         public DateTime? LastPerformedAt { get; init; }
         public bool IsActive { get; init; }
+        public List<SelectListItem> AvailableEquipment { get; init; } = new();
     }
 }
