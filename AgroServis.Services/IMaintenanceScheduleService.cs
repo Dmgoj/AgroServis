@@ -11,7 +11,7 @@ namespace AgroServis.Services
     {
         Task<int> CreateAsync(MaintenanceScheduleCreateDto dto);
 
-        Task<List<MaintenanceScheduleDto>> GetAllAsync();
+        Task<List<MaintenanceScheduleDto>> GetAllAsync(int? equipmentId = null);
 
         Task<MaintenanceScheduleDto?> GetByIdAsync(int id);
 
