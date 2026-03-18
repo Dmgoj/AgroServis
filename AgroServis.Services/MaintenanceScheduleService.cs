@@ -42,10 +42,18 @@ namespace AgroServis.Services
             return schedule.Id;
         }
 
-        public async Task<List<MaintenanceScheduleDto>> GetAllAsync()
+        public async Task<List<MaintenanceScheduleDto>> GetAllAsync(int? equipmentId = null)
         {
-            return await _context.MaintenanceSchedules
+            var query = _context.MaintenanceSchedules
                 .Include(s => s.Equipment)
+                .AsQueryable();
+
+            if (equipmentId.HasValue)
+            {
+                query = query.Where(s => s.EquipmentId == equipmentId.Value);
+            }
+
+            return await query
                 .Select(s => new MaintenanceScheduleDto
                 {
                     Id = s.Id,
