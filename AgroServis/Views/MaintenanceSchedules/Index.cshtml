@@ -5,7 +5,12 @@
 }
 
 <h2>Maintenance Schedules</h2>
-
+@if (ViewBag.EquipmentId != null)
+{
+    <div class="alert alert-info">
+        Showing schedules for selected equipment.
+    </div>
+}
 <div class="mb-3">
     <a asp-action="Create" class="btn btn-primary">
         Create Schedule
