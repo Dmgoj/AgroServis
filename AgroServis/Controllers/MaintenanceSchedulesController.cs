@@ -14,16 +14,25 @@ namespace AgroServis.Controllers
             _service = service;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? equipmentId)
         {
-            var schedules = await _service.GetAllAsync();
+            var schedules = await _service.GetAllAsync(equipmentId);
+
+            ViewBag.EquipmentId = equipmentId;
+
             return View(schedules);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? equipmentId)
         {
             var dto = await _service.GetForCreateAsync();
+
+            if (equipmentId.HasValue)
+            {
+                dto = dto with { EquipmentId = equipmentId.Value };
+            }
+
             return View(dto);
         }
 
