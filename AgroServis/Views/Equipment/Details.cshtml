@@ -24,10 +24,16 @@
 <div class="col-md-6">
 	<a asp-controller="Equipment" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
 	<a asp-controller="MaintenanceSchedules"
+	   asp-action="Create"
+	   asp-route-equipmentId="@Model.Id"
+	   class="btn btn-primary">
+		Create Schedule
+	</a>
+	<a asp-controller="MaintenanceSchedules"
 	   asp-action="Index"
 	   asp-route-equipmentId="@Model.Id"
 	   class="btn btn-outline-primary">
-		View Schedules
+		View Maintenance Schedules
 	</a>
 </div>
 <a asp-controller="Equipment" asp-action="Index" class="btn btn-secondary">Back to List</a>
