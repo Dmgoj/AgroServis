@@ -22,18 +22,20 @@ namespace AgroServis.Services
         private readonly IPaginationService _paginationService;
         private readonly IMemoryCache _cache;
         private readonly ILogger<MaintenanceService> _logger;
-
+        private readonly IMaintenanceScheduleService _scheduleService;
         public MaintenanceService(
             ApplicationDbContext context,
             IPaginationService paginationService,
             IMemoryCache cache,
-            ILogger<MaintenanceService> logger
+            ILogger<MaintenanceService> logger,
+            IMaintenanceScheduleService scheduleService
         )
         {
             _context = context;
             _paginationService = paginationService;
             _cache = cache;
             _logger = logger;
+            _scheduleService = scheduleService;
         }
 
         public async Task<int> CreateAsync(MaintenanceCreateDto dto, string? performedByUserId)
@@ -394,7 +396,7 @@ namespace AgroServis.Services
             maintenance.MaintenanceDate = dto.MaintenanceDate;
             maintenance.Description = dto.Description;
             maintenance.Type = dto.Type;
-            maintenance.Status = dto.Status;
+            maintenance.Status = newStatus;
             maintenance.Cost = dto.Cost;
             maintenance.Notes = dto.Notes;
             maintenance.PerformedBy = dto.PerformedBy;
@@ -406,6 +408,16 @@ namespace AgroServis.Services
             if (!wasCompleted && isCompleted)
             {
                 maintenance.CompletedAt = DateTime.UtcNow;
+
+                await _scheduleService.UpdateAfterMaintenanceCompleted(
+                    maintenance.EquipmentId,
+                    maintenance.MaintenanceDate
+                );
+
+                _logger.LogInformation(
+                    "Schedules updated for Equipment {EquipmentId} after maintenance completion",
+                    maintenance.EquipmentId
+                );
             }
             else if (wasCompleted && !isCompleted)
             {
