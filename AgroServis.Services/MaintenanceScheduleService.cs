@@ -176,5 +176,21 @@ namespace AgroServis.Services
                 AvailableEquipment = availableEquipment
             };
         }
+
+        public async Task UpdateAfterMaintenanceCompleted(int equipmentId, DateTime performedAt)
+        {
+            var schedules = await _context.MaintenanceSchedules
+                .Where(s => s.EquipmentId == equipmentId && s.IsActive)
+                .ToListAsync();
+
+            foreach (var schedule in schedules)
+            {
+                schedule.LastPerformedAt = performedAt;
+                schedule.NextDueDate = performedAt.AddDays(schedule.IntervalDays);
+                schedule.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+        }
     }
 }
