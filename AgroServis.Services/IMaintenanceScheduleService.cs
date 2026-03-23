@@ -20,5 +20,6 @@ namespace AgroServis.Services
         Task DeleteAsync(int id);
         Task<MaintenanceScheduleCreateDto> GetForCreateAsync();
         Task<MaintenanceScheduleUpdateDto?> GetForEditAsync(int id);
+        Task UpdateAfterMaintenanceCompleted(int equipmentId, DateTime performedAt);
     }
 }
