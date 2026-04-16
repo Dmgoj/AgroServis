@@ -4,15 +4,17 @@
 ![SQL Server](https://img.shields.io/badge/SQL_Server-CC2927?logo=microsoftsqlserver&logoColor=white)
 ![Entity Framework](https://img.shields.io/badge/EF_Core-512BD4?logo=dotnet&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![SendGrid](https://img.shields.io/badge/SendGrid-Email-00B2FF?logo=sendgrid&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
-## Farm equipment management
-
-App is intended for farmers to track the maintenance of their agricultural machines.
+## About
+App intended for farmers to track maintenance of their agricultural 
+machines. Built with Clean Architecture, role-based access control, 
+and a Dockerized SQL Server backend.
 
 ## Quick start
 1. Clone the repository.
 2. Configure settings in `appsettings.json` (see `EmailSettings` section).
 3. Run locally
 ## Configuration
-- Set `EmailSettings:SmtpServer`, `Port`, `Username`, `Password`, and `From` in `appsettings.json` or environment variables.
-- Use `ASPNETCORE_ENVIRONMENT` to switch environments.
+- Set `SendGrid:ApiKey` in `appsettings.json` or as an environment variable
+- Use `ASPNETCORE_ENVIRONMENT` to switch environments
