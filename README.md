@@ -21,7 +21,6 @@ Equipment that passed the date due of the maintenance is highlighted in red.
 ### Maintenances
 Anyone can see the maintenance list. Workers can edit and delete records 
 they created themselves. Admins can edit and delete any record.
-
 List is filterable by equipment, type, status, and date range.
 Supports pagination and a printable report.
 
