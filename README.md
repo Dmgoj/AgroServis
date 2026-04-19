@@ -13,6 +13,8 @@ and a Dockerized SQL Server backend.
 ## Features
 ### Euqipment
 Anyone can see the list of equipment, Worker can start a maintainance by clicking Maintain button, Admin can add, edit or delete equipment.
+<img width="1918" height="917" alt="equipmentScreen" src="https://github.com/user-attachments/assets/7afdac6c-f716-44f5-8f49-d9db5011270b" />
+
 
 
 ## Quick start
