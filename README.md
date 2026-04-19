@@ -10,6 +10,10 @@
 App intended for farmers to track maintenance of their agricultural 
 machines. Built with Clean Architecture, role-based access control, 
 and a Dockerized SQL Server backend.
+## Features
+### Euqipment
+Anyone can see the list of equipment, Worker can start a maintainance by clicking Maintain button, Admin can add, edit or delete equipment.
+
 
 ## Quick start
 1. Clone the repository.
