@@ -24,7 +24,7 @@ they created themselves. Admins can edit and delete any record.
 List is filterable by equipment, type, status, and date range.
 Supports pagination and a printable report.
 
-- <img width="1903" height="913" alt="maintenanceScreen" src="https://github.com/user-attachments/assets/caa7b5d8-8fc3-4c9e-ac9d-5fbd0e37a782" />
+<img width="1903" height="913" alt="maintenanceScreen" src="https://github.com/user-attachments/assets/caa7b5d8-8fc3-4c9e-ac9d-5fbd0e37a782" />
 
 
 
