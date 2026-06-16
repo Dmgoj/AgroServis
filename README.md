@@ -35,6 +35,13 @@ The solution follows **Clean Architecture** principles and is organized into 4 p
 - **AgroServis.Services** – Business logic layer (service interfaces and implementations)
 - **AgroServis.Tests** – Unit tests (XUnit, Moq)
 
+  ### Key implementation details
+- **Authentication & Authorization** – ASP.NET Core Identity with role-based access control
+- **Caching** – `IMemoryCache` for reducing database load on frequently accessed data
+- **Global exception handling** – centralized middleware for consistent error responses
+- **Email notifications** – SendGrid integration via `AgroServis.Services`
+- **Containerization** – Docker + Docker Compose for local development and deployment
+
 ## Quick start
 1. Clone the repository.
 2. Configure settings in `appsettings.json` (see `EmailSettings` section).
