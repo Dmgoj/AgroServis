@@ -26,7 +26,13 @@ Supports pagination and a printable report.
 
 <img width="1903" height="913" alt="maintenanceScreen" src="https://github.com/user-attachments/assets/caa7b5d8-8fc3-4c9e-ac9d-5fbd0e37a782" />
 
+## Architecture
 
+The solution follows **Clean Architecture** principles and is organized into 4 projects:
+
+- **AgroServis** – Presentation layer (ASP.NET Core MVC, controllers, views, middleware)
+- **AgroServis.DAL** – Data Access Layer (Entity Framework Core, SQL Server, repositories, migrations)
+- **AgroServis.Services** – Business logic layer (service interfaces and implementations)
 
 
 ## Quick start
