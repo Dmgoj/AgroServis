@@ -33,7 +33,7 @@ The solution follows **Clean Architecture** principles and is organized into 4 p
 - **AgroServis** – Presentation layer (ASP.NET Core MVC, controllers, views, middleware)
 - **AgroServis.DAL** – Data Access Layer (Entity Framework Core, SQL Server, repositories, migrations)
 - **AgroServis.Services** – Business logic layer (service interfaces and implementations)
-
+- **AgroServis.Tests** – Unit tests (XUnit, Moq)
 
 ## Quick start
 1. Clone the repository.
